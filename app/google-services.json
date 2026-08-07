@@ -12,7 +12,20 @@
           "package_name": "com.audiogames.cadernos"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "633868090952-a5d438qhleraj987tsnp8nstvb9aluu5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.audiogames.cadernos",
+            "certificate_hash": "4451d2dfb795bbc8b76701223aca7487096c85be"
+          }
+        },
+        {
+          "client_id": "633868090952-jgqu6thc04fc4s6stafmh8r3igbrpmr5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCCqjSIfDtRD7AD9PDxYjPEFqUyBKH6J78"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633868090952-jgqu6thc04fc4s6stafmh8r3igbrpmr5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
