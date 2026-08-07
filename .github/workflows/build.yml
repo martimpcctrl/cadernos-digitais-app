@@ -1,0 +1,79 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Aceitar licencas do Android SDK (garantia extra)
+        run: yes | sdkmanager --licenses || true
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Preparar chave de assinatura fixa
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+        run: |
+          FALTANDO=""
+          [ -z "$SIGNING_KEYSTORE_BASE64" ] && FALTANDO="$FALTANDO SIGNING_KEYSTORE_BASE64"
+          [ -z "$SIGNING_KEYSTORE_PASSWORD" ] && FALTANDO="$FALTANDO SIGNING_KEYSTORE_PASSWORD"
+          [ -z "$SIGNING_KEY_ALIAS" ] && FALTANDO="$FALTANDO SIGNING_KEY_ALIAS"
+          if [ -n "$FALTANDO" ]; then
+            echo "::error::Segredo(s) faltando:$FALTANDO"
+            echo "::error::Configure com 'gh secret set' antes de compilar. Build cancelado de proposito."
+            exit 1
+          fi
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/cadernos-release.keystore"
+          echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/cadernos-release.keystore" >> "$GITHUB_ENV"
+
+      - name: Compilar o APK
+        env:
+          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+        run: |
+          gradle assembleDebug --stacktrace \
+            -PappVersionCode=${{ github.run_number }} \
+            -PappVersionName="v1.${{ github.run_number }}"
+
+      - name: Publicar o APK gerado (artifact temporario)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cadernos-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Criar Release no GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSAO="v1.${{ github.run_number }}"
+          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "cadernos-$VERSAO.apk"
+          gh release delete "$VERSAO" --yes --cleanup-tag --repo "${{ github.repository }}" || true
+          gh release create "$VERSAO" "cadernos-$VERSAO.apk" \
+            --repo "${{ github.repository }}" \
+            --title "Versão $VERSAO" \
+            --notes "Build automático gerado pelo GitHub Actions (execução número ${{ github.run_number }})."

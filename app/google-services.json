@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "633868090952",
+    "project_id": "cadernos-digitais-martim",
+    "storage_bucket": "cadernos-digitais-martim.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633868090952:android:805f73b2d094d32deaa27d",
+        "android_client_info": {
+          "package_name": "com.audiogames.cadernos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCqjSIfDtRD7AD9PDxYjPEFqUyBKH6J78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
