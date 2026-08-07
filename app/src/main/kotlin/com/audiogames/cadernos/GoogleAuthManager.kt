@@ -14,7 +14,8 @@ class GoogleAuthManager(private val activity: Activity) {
 
     private val googleClient: GoogleSignInClient by lazy {
         val webClientId = try {
-            activity.getString(R.string.default_web_client_id)
+            val resId = activity.resources.getIdentifier("default_web_client_id", "string", activity.packageName)
+            if (resId != 0) activity.getString(resId) else null
         } catch (e: Exception) {
             null
         }
