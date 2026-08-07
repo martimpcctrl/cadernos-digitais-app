@@ -17,6 +17,9 @@ class PaginaActivity : Activity() {
     private lateinit var titulo: String
     private lateinit var conteudo: String
     private lateinit var tipo: String
+    private var cadernoIdRef: String = ""
+    private var cadernoNomeRef: String = ""
+    private var professorRef: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +28,9 @@ class PaginaActivity : Activity() {
         conteudo = intent.getStringExtra("conteudo") ?: ""
         tipo = intent.getStringExtra("tipo") ?: "nota"
         val dataEntrega = intent.getStringExtra("dataEntrega") ?: ""
+        cadernoIdRef = intent.getStringExtra("cadernoId") ?: ""
+        cadernoNomeRef = intent.getStringExtra("cadernoNome") ?: ""
+        professorRef = intent.getStringExtra("professor") ?: ""
 
         montarTela(dataEntrega)
     }
@@ -76,8 +82,9 @@ class PaginaActivity : Activity() {
 
     private fun enviarPorEmail() {
         val intent = Intent(this, EnviarEmailActivity::class.java)
-        intent.putExtra("assuntoSugerido", titulo)
-        intent.putExtra("mensagemSugerida", conteudo)
+        intent.putExtra("cadernoId", cadernoIdRef)
+        intent.putExtra("cadernoNome", cadernoNomeRef)
+        intent.putExtra("professor", professorRef)
         startActivity(intent)
     }
 

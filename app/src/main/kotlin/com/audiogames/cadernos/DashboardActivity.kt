@@ -17,7 +17,6 @@ import org.json.JSONObject
 
 class DashboardActivity : Activity() {
 
-    private lateinit var googleAuth: GoogleAuthManager
     private lateinit var lista: RecyclerView
     private lateinit var adaptador: AdaptadorCadernos
     private lateinit var refresh: SwipeRefreshLayout
@@ -25,9 +24,27 @@ class DashboardActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        googleAuth = GoogleAuthManager(this)
         montarTela()
         carregarCadernos()
+        verificarAtualizacao(manual = false)
+    }
+
+    private fun verificarAtualizacao(manual: Boolean) {
+        if (manual) mostrarAviso(this, "Verificando atualizações...")
+        UpdateManager(this).verificarSilenciosamente { atualizacao ->
+            AlertDialog.Builder(this)
+                .setTitle("Nova versão disponível")
+                .setMessage("Versão ${atualizacao.versionName} já está pronta. Baixar e instalar agora?")
+                .setPositiveButton("Atualizar") { _, _ ->
+                    UpdateManager(this).baixarEInstalar(
+                        atualizacao,
+                        onProgresso = { mensagem -> mostrarAviso(this, mensagem) },
+                        onErro = { mensagem -> mostrarErro(this, mensagem) }
+                    )
+                }
+                .setNegativeButton("Agora não", null)
+                .show()
+        }
     }
 
     override fun onResume() {
@@ -73,13 +90,11 @@ class DashboardActivity : Activity() {
         }
 
         val botaoNovo = criarBotaoPrimario(this, "+ Novo caderno") { abrirDialogoNovoCaderno() }
-        val botaoSair = criarBotaoSecundario(this, "Sair da conta") { confirmarSair() }
 
         val rodape = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(this@DashboardActivity, 16), dp(this@DashboardActivity, 8), dp(this@DashboardActivity, 16), dp(this@DashboardActivity, 16))
             addView(botaoNovo)
-            addView(botaoSair)
         }
 
         raiz.addView(acoes)
@@ -113,6 +128,7 @@ class DashboardActivity : Activity() {
         val intent = Intent(this, CadernoActivity::class.java)
         intent.putExtra("cadernoId", caderno.id)
         intent.putExtra("cadernoNome", caderno.nome)
+        intent.putExtra("professor", caderno.professor)
         startActivity(intent)
     }
 
@@ -123,8 +139,10 @@ class DashboardActivity : Activity() {
         }
         val campoNome = EditText(this).apply { hint = "Nome do caderno (obrigatório)" }
         val campoMateria = EditText(this).apply { hint = "Matéria (opcional)" }
+        val campoProfessor = EditText(this).apply { hint = "Nome do professor (opcional)" }
         layout.addView(campoNome)
         layout.addView(campoMateria)
+        layout.addView(campoProfessor)
 
         AlertDialog.Builder(this)
             .setTitle("Novo caderno")
@@ -135,34 +153,21 @@ class DashboardActivity : Activity() {
                     mostrarErro(this, "Digite um nome pro caderno.")
                     return@setPositiveButton
                 }
-                criarCaderno(nome, campoMateria.text.toString().trim())
+                criarCaderno(nome, campoMateria.text.toString().trim(), campoProfessor.text.toString().trim())
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun criarCaderno(nome: String, materia: String) {
+    private fun criarCaderno(nome: String, materia: String, professor: String) {
         val corpo = JSONObject().apply {
             put("nome", nome)
             put("materia", materia)
+            put("professor", professor)
         }
         ApiClient.post("cadernos/criar.php", corpo, onSucesso = {
             mostrarAviso(this, "Caderno criado!")
             carregarCadernos()
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
-    }
-
-    private fun confirmarSair() {
-        AlertDialog.Builder(this)
-            .setTitle("Sair da conta")
-            .setMessage("Tem certeza que quer sair?")
-            .setPositiveButton("Sair") { _, _ ->
-                googleAuth.sair {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
     }
 }

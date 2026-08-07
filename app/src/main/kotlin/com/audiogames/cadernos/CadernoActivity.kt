@@ -17,6 +17,7 @@ class CadernoActivity : Activity() {
 
     private lateinit var cadernoId: String
     private lateinit var cadernoNome: String
+    private var professor: String = ""
     private lateinit var adaptador: AdaptadorPaginas
     private lateinit var refresh: SwipeRefreshLayout
     private lateinit var containerVazio: LinearLayout
@@ -26,6 +27,7 @@ class CadernoActivity : Activity() {
         super.onCreate(savedInstanceState)
         cadernoId = intent.getStringExtra("cadernoId") ?: run { finish(); return }
         cadernoNome = intent.getStringExtra("cadernoNome") ?: "Caderno"
+        professor = intent.getStringExtra("professor") ?: ""
         montarTela()
         carregarPaginas()
     }
@@ -43,6 +45,7 @@ class CadernoActivity : Activity() {
             setPadding(dp(this@CadernoActivity, 12), dp(this@CadernoActivity, 10), dp(this@CadernoActivity, 12), dp(this@CadernoActivity, 4))
         }
         acoes.addView(botaoAcao("Resumo IA") { abrirResumoIa() })
+        acoes.addView(botaoAcao("Email") { enviarEmailAoProfessor() })
         acoes.addView(botaoAcao("Exportar PDF") { exportarPdf() })
         acoes.addView(botaoAcao("Compartilhar") { compartilhar() })
         acoes.addView(botaoAcao("Excluir") { confirmarExcluirCaderno() })
@@ -117,6 +120,9 @@ class CadernoActivity : Activity() {
         intent.putExtra("tipo", pagina.tipo)
         intent.putExtra("dataEntrega", pagina.dataEntrega)
         intent.putExtra("concluida", pagina.concluida)
+        intent.putExtra("cadernoId", cadernoId)
+        intent.putExtra("cadernoNome", cadernoNome)
+        intent.putExtra("professor", professor)
         startActivity(intent)
     }
 
@@ -172,6 +178,14 @@ class CadernoActivity : Activity() {
                 mostrarErro(this, "Não consegui salvar o PDF: ${e.message}")
             }
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
+    }
+
+    private fun enviarEmailAoProfessor() {
+        val intent = Intent(this, EnviarEmailActivity::class.java)
+        intent.putExtra("cadernoId", cadernoId)
+        intent.putExtra("cadernoNome", cadernoNome)
+        intent.putExtra("professor", professor)
+        startActivity(intent)
     }
 
     private fun compartilhar() {

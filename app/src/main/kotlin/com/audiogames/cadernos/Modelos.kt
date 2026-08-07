@@ -6,6 +6,7 @@ data class Caderno(
     val id: String,
     val nome: String,
     val materia: String,
+    val professor: String,
     val cor: String,
     val totalPaginas: Int,
     val tarefasPendentes: Int
@@ -15,6 +16,7 @@ data class Caderno(
             id = json.optString("id"),
             nome = json.optString("nome"),
             materia = json.optString("materia"),
+            professor = json.optString("professor"),
             cor = json.optString("cor", "#4A90D9"),
             totalPaginas = json.optInt("totalPaginas", 0),
             tarefasPendentes = json.optInt("tarefasPendentes", 0)
