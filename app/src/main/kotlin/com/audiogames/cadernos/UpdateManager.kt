@@ -38,6 +38,7 @@ class UpdateManager(private val context: Context) {
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 conn.setRequestProperty("Accept", "application/vnd.github+json")
+                conn.setRequestProperty("User-Agent", "CadernosDigitaisApp")
 
                 if (conn.responseCode != 200) {
                     conn.disconnect()
@@ -77,27 +78,22 @@ class UpdateManager(private val context: Context) {
             try {
                 handler.post { onProgresso("Baixando atualização...") }
 
-                val conn = URL(atualizacao.apkUrl).openConnection() as HttpURLConnection
-                conn.connectTimeout = 10000
-                conn.readTimeout = 15000
-                conn.instanceFollowRedirects = true
-
-                if (conn.responseCode != 200) {
-                    handler.post { onErro("Não consegui baixar a atualização (erro ${conn.responseCode}).") }
-                    conn.disconnect()
-                    return@thread
-                }
+                val entrada = abrirComRedirecionamento(atualizacao.apkUrl, 0)
+                    ?: throw Exception("Não consegui acessar o link do APK depois de seguir os redirecionamentos.")
 
                 val pasta = File(context.getExternalFilesDir(null), "atualizacoes")
                 if (!pasta.exists()) pasta.mkdirs()
                 val destino = File(pasta, "cadernos-update.apk")
 
-                conn.inputStream.use { entrada ->
+                entrada.use { fluxo ->
                     destino.outputStream().use { saida ->
-                        entrada.copyTo(saida)
+                        fluxo.copyTo(saida)
                     }
                 }
-                conn.disconnect()
+
+                if (destino.length() < 1000) {
+                    throw Exception("O arquivo baixado ficou vazio ou incompleto (${destino.length()} bytes).")
+                }
 
                 val uri: Uri = FileProvider.getUriForFile(
                     context,
@@ -120,8 +116,32 @@ class UpdateManager(private val context: Context) {
                     }
                 }
             } catch (e: Exception) {
-                handler.post { onErro("Erro ao baixar a atualização. Verifique sua conexão.") }
+                handler.post { onErro("Erro ao baixar a atualização: ${e.message ?: e.javaClass.simpleName}") }
             }
         }
+    }
+
+    /** Segue redirecionamentos (comum em links de download do GitHub) até chegar no arquivo de verdade. */
+    private fun abrirComRedirecionamento(url: String, tentativa: Int): java.io.InputStream? {
+        if (tentativa > 5) return null
+
+        val conn = URL(url).openConnection() as HttpURLConnection
+        conn.instanceFollowRedirects = false
+        conn.setRequestProperty("User-Agent", "CadernosDigitaisApp")
+        conn.connectTimeout = 15000
+        conn.readTimeout = 30000
+
+        val codigo = conn.responseCode
+        if (codigo in 300..399) {
+            val proximaUrl = conn.getHeaderField("Location") ?: return null
+            conn.disconnect()
+            return abrirComRedirecionamento(proximaUrl, tentativa + 1)
+        }
+
+        if (codigo != 200) {
+            throw Exception("O servidor respondeu com o código $codigo ao tentar baixar o APK.")
+        }
+
+        return conn.inputStream
     }
 }
