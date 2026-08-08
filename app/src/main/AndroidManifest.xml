@@ -34,6 +34,17 @@
         <activity android:name=".EnviarEmailActivity" android:exported="false" />
         <activity android:name=".CompartilharActivity" android:exported="false" />
         <activity android:name=".OcrActivity" android:exported="false" />
+        <activity
+            android:name=".CompartilhadoActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cadernos" android:host="compartilhar" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
