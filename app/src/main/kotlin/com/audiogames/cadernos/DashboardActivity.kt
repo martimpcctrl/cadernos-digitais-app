@@ -25,7 +25,6 @@ class DashboardActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         montarTela()
-        carregarCadernos()
         verificarAtualizacao(manual = false)
     }
 

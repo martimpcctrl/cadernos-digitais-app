@@ -96,6 +96,8 @@ class EnviarEmailActivity : Activity() {
         }, onErro = { montarModelos(emptyList()) })
     }
 
+    private var primeiraAplicacaoFeita = false
+
     private fun montarModelos(tarefasAtrasadas: List<Pagina>) {
         val professorTexto = professor.ifBlank { "(nome do professor)" }
         val cadernoTexto = cadernoNome.ifBlank { "(nome da disciplina)" }
@@ -162,12 +164,20 @@ class EnviarEmailActivity : Activity() {
 
         spinnerModelo.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (!primeiraAplicacaoFeita) {
+                    // O Android chama isso sozinho assim que o adapter é
+                    // configurado (comportamento padrão de Spinner) - ignora
+                    // essa primeira chamada automática, já que aplicamos o
+                    // primeiro modelo manualmente logo abaixo.
+                    primeiraAplicacaoFeita = true
+                    return
+                }
                 aplicarModelo(modelos[position])
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
-        // Aplica o primeiro modelo (Cobrar tarefas) automaticamente ao abrir.
+        // Aplica o primeiro modelo (Cobrar tarefas) manualmente ao abrir.
         aplicarModelo(modelos.first())
     }
 

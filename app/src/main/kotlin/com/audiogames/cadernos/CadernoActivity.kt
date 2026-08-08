@@ -29,7 +29,6 @@ class CadernoActivity : Activity() {
         cadernoNome = intent.getStringExtra("cadernoNome") ?: "Caderno"
         professor = intent.getStringExtra("professor") ?: ""
         montarTela()
-        carregarPaginas()
     }
 
     override fun onResume() {
@@ -39,6 +38,16 @@ class CadernoActivity : Activity() {
 
     private fun montarTela() {
         val raiz = criarTelaBase(this, cadernoNome)
+
+        if (professor.isNotBlank()) {
+            val subtitulo = android.widget.TextView(this).apply {
+                text = "Professor: $professor"
+                textSize = 13f
+                setTextColor(android.graphics.Color.parseColor(Cores.TEXTO_SECUNDARIO))
+                setPadding(dp(this@CadernoActivity, 16), dp(this@CadernoActivity, 8), dp(this@CadernoActivity, 16), 0)
+            }
+            raiz.addView(subtitulo)
+        }
 
         val acoes = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -160,7 +169,8 @@ class CadernoActivity : Activity() {
             try {
                 val pasta = java.io.File(getExternalFilesDir(null), "pdfs")
                 if (!pasta.exists()) pasta.mkdirs()
-                val arquivo = java.io.File(pasta, "$cadernoNome.pdf")
+                val nomeArquivoSeguro = cadernoNome.replace(Regex("[^a-zA-Z0-9_\\- ]"), "_").ifBlank { "caderno" }
+                val arquivo = java.io.File(pasta, "$nomeArquivoSeguro.pdf")
                 arquivo.writeBytes(bytes)
 
                 val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", arquivo)

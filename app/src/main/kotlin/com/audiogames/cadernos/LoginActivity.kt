@@ -154,8 +154,14 @@ class LoginActivity : Activity() {
                 val perfil = com.google.firebase.auth.UserProfileChangeRequest.Builder()
                     .setDisplayName(nome)
                     .build()
-                resultado.user?.updateProfile(perfil)?.addOnCompleteListener { irParaDashboard() }
-                    ?: irParaDashboard()
+                resultado.user?.updateProfile(perfil)?.addOnCompleteListener {
+                    // Salva o nome direto no servidor também - o token de
+                    // login às vezes ainda não traz o nome atualizado logo
+                    // depois de criar a conta, então não dá pra confiar só
+                    // nele pra essa primeira gravação.
+                    val corpo = org.json.JSONObject().apply { put("nomeAluno", nome) }
+                    ApiClient.post("conta/configuracoes.php", corpo, onSucesso = { irParaDashboard() }, onErro = { irParaDashboard() })
+                } ?: irParaDashboard()
             }
             .addOnFailureListener { erro -> mostrarErroFirebase(erro) }
     }

@@ -61,6 +61,7 @@ object ApiClient {
         onErro: (String) -> Unit
     ) {
         thread {
+            var conexao: HttpURLConnection? = null
             try {
                 val token = tokenAtual()
                 if (token == null) {
@@ -68,7 +69,7 @@ object ApiClient {
                     return@thread
                 }
                 val url = montarUrl(caminho, parametros)
-                val conexao = URL(url).openConnection() as HttpURLConnection
+                conexao = URL(url).openConnection() as HttpURLConnection
                 conexao.requestMethod = "GET"
                 conexao.setRequestProperty("Authorization", "Bearer $token")
                 conexao.connectTimeout = 15000
@@ -83,6 +84,8 @@ object ApiClient {
                 handler.post { onSucesso(bytes) }
             } catch (e: Exception) {
                 postarErro(onErro, "Falha de conexão: ${e.message}")
+            } finally {
+                conexao?.disconnect()
             }
         }
     }
@@ -97,6 +100,7 @@ object ApiClient {
         onErro: (String) -> Unit
     ) {
         thread {
+            var conexao: HttpURLConnection? = null
             try {
                 val token = if (exigeLogin) tokenAtual() else null
                 if (exigeLogin && token == null) {
@@ -105,7 +109,7 @@ object ApiClient {
                 }
 
                 val url = montarUrl(caminho, parametros)
-                val conexao = URL(url).openConnection() as HttpURLConnection
+                conexao = URL(url).openConnection() as HttpURLConnection
                 conexao.requestMethod = metodo
                 conexao.connectTimeout = 15000
                 conexao.readTimeout = 20000
@@ -132,6 +136,8 @@ object ApiClient {
                 }
             } catch (e: Exception) {
                 postarErro(onErro, "Falha de conexão: ${e.message ?: "verifique sua internet"}")
+            } finally {
+                conexao?.disconnect()
             }
         }
     }

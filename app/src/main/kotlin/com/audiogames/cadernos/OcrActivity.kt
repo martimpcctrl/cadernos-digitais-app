@@ -89,6 +89,7 @@ class OcrActivity : Activity() {
         if (requestCode != REQUEST_CODE_CAMERA) return
 
         if (resultCode != RESULT_OK) {
+            arquivoFoto?.delete()
             finish()
             return
         }
@@ -102,6 +103,7 @@ class OcrActivity : Activity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     mostrarErro(this, "Não consegui processar a foto: ${e.message}")
+                    arquivoFoto?.delete()
                     finish()
                 }
             }
@@ -134,9 +136,11 @@ class OcrActivity : Activity() {
             val texto = json.optString("texto")
             val resultado = Intent().putExtra("textoExtraido", texto)
             setResult(RESULT_OK, resultado)
+            arquivoFoto?.delete()
             finish()
         }, onErro = { mensagem ->
             mostrarErro(this, mensagem)
+            arquivoFoto?.delete()
             finish()
         })
     }

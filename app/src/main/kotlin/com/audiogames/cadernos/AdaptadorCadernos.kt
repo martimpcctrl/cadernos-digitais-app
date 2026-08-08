@@ -56,6 +56,9 @@ class AdaptadorCadernos(
         holder.nome.text = if (caderno.materia.isNotBlank()) "${caderno.nome} — ${caderno.materia}" else caderno.nome
 
         val partesInfo = mutableListOf("${caderno.totalPaginas} página(s)")
+        if (caderno.professor.isNotBlank()) {
+            partesInfo.add("Prof. ${caderno.professor}")
+        }
         if (caderno.tarefasPendentes > 0) {
             partesInfo.add("${caderno.tarefasPendentes} tarefa(s) pendente(s)")
         }
