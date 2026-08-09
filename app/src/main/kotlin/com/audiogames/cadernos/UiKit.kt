@@ -85,6 +85,22 @@ object Cores {
 fun dp(activity: Activity, valor: Int): Int =
     (valor * activity.resources.displayMetrics.density).toInt()
 
+/**
+ * Diálogos e alguns controles nativos (Switch, Spinner, CheckBox) seguem
+ * o tema do SISTEMA por padrão, não a paleta escolhida dentro do app -
+ * isso causa uma mistura estranha (diálogo claro numa tela escura, por
+ * exemplo). Essa função devolve um "contexto" que força esses controles
+ * a usar o tema certo, de acordo com o que está ativo no app agora.
+ */
+fun contextoTema(activity: Activity): android.content.Context {
+    val temaId = if (Cores.escuroAtivo) {
+        android.R.style.Theme_DeviceDefault
+    } else {
+        android.R.style.Theme_DeviceDefault_Light
+    }
+    return android.view.ContextThemeWrapper(activity, temaId)
+}
+
 /** Monta o "esqueleto" padrão de tela: barra de título (com botão voltar opcional) + área de conteúdo. */
 fun criarTelaBase(activity: Activity, titulo: String, mostrarVoltar: Boolean = true): LinearLayout {
     val raiz = LinearLayout(activity).apply {

@@ -32,6 +32,11 @@
         <activity android:name=".ResumoDiaActivity" android:exported="false" />
         <activity android:name=".BuscaActivity" android:exported="false" />
         <activity android:name=".ConfiguracoesActivity" android:exported="false" />
+        <activity android:name=".ConfigAparenciaActivity" android:exported="false" />
+        <activity android:name=".ConfigPerfilActivity" android:exported="false" />
+        <activity android:name=".ConfigEmailActivity" android:exported="false" />
+        <activity android:name=".ConfigSegurancaActivity" android:exported="false" />
+        <activity android:name=".ConfigContaActivity" android:exported="false" />
         <activity android:name=".EnviarEmailActivity" android:exported="false" />
         <activity android:name=".CompartilharActivity" android:exported="false" />
         <activity

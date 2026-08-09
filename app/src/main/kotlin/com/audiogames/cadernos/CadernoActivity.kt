@@ -154,9 +154,9 @@ class CadernoActivity : Activity() {
     }
 
     private fun abrirResumoIa() {
-        AlertDialog.Builder(this).setTitle("Gerando resumo...").setMessage("Aguarde um instante.").show()
+        AlertDialog.Builder(contextoTema(this)).setTitle("Gerando resumo...").setMessage("Aguarde um instante.").show()
         ApiClient.get("resumo/ia.php", mapOf("cadernoId" to cadernoId), onSucesso = { json ->
-            AlertDialog.Builder(this)
+            AlertDialog.Builder(contextoTema(this))
                 .setTitle("Resumo com IA")
                 .setMessage(json.optString("resumo"))
                 .setPositiveButton("Fechar", null)
@@ -207,7 +207,7 @@ class CadernoActivity : Activity() {
     }
 
     private fun confirmarExcluirCaderno() {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(contextoTema(this))
             .setTitle("Excluir caderno")
             .setMessage("Isso vai apagar \"$cadernoNome\" e todas as páginas dentro dele. Não dá pra desfazer.")
             .setPositiveButton("Excluir") { _, _ ->

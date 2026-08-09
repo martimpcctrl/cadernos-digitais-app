@@ -90,7 +90,7 @@ class PaginaActivity : Activity() {
     }
 
     private fun confirmarExcluir() {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(contextoTema(this))
             .setTitle("Excluir página")
             .setMessage("Tem certeza que quer excluir \"$titulo\"? Não dá pra desfazer.")
             .setPositiveButton("Excluir") { _, _ ->

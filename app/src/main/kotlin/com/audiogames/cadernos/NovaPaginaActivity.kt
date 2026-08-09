@@ -49,10 +49,10 @@ class NovaPaginaActivity : Activity() {
 
         campoTitulo = criarCampoTexto(this, "Título")
 
-        grupoTipo = RadioGroup(this).apply {
+        grupoTipo = RadioGroup(contextoTema(this)).apply {
             orientation = RadioGroup.HORIZONTAL
-            val opcaoNota = RadioButton(this@NovaPaginaActivity).apply { text = "Nota"; id = 1; isChecked = true }
-            val opcaoTarefa = RadioButton(this@NovaPaginaActivity).apply { text = "Tarefa"; id = 2 }
+            val opcaoNota = RadioButton(contextoTema(this@NovaPaginaActivity)).apply { text = "Nota"; id = 1; isChecked = true }
+            val opcaoTarefa = RadioButton(contextoTema(this@NovaPaginaActivity)).apply { text = "Tarefa"; id = 2 }
             addView(opcaoNota)
             addView(opcaoTarefa)
             setOnCheckedChangeListener { _, checkedId -> botaoData.visibility = if (checkedId == 2) android.view.View.VISIBLE else android.view.View.GONE }

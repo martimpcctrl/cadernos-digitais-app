@@ -37,7 +37,7 @@ class DashboardActivity : Activity() {
     private fun verificarAtualizacao(manual: Boolean) {
         if (manual) mostrarAviso(this, "Verificando atualizações...")
         UpdateManager(this).verificarSilenciosamente { atualizacao ->
-            AlertDialog.Builder(this)
+            AlertDialog.Builder(contextoTema(this))
                 .setTitle("Nova versão disponível")
                 .setMessage("Versão ${atualizacao.versionName} já está pronta. Baixar e instalar agora?")
                 .setPositiveButton("Atualizar") { _, _ ->
@@ -144,8 +144,8 @@ class DashboardActivity : Activity() {
         }
 
         val rotuloMateria = TextView(this).apply { text = "Matéria" }
-        val seletorMateria = Spinner(this).apply {
-            adapter = ArrayAdapter(this@DashboardActivity, android.R.layout.simple_spinner_dropdown_item, Materias.nomesParaSelecao())
+        val seletorMateria = Spinner(contextoTema(this)).apply {
+            adapter = ArrayAdapter(contextoTema(this@DashboardActivity), android.R.layout.simple_spinner_dropdown_item, Materias.nomesParaSelecao())
         }
 
         val campoNome = EditText(this).apply { hint = "Nome do caderno" }
@@ -174,7 +174,7 @@ class DashboardActivity : Activity() {
         layout.addView(campoNome)
         layout.addView(campoProfessor)
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(contextoTema(this))
             .setTitle("Novo caderno")
             .setView(layout)
             .setPositiveButton("Criar") { _, _ ->

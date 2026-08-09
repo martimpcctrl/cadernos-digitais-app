@@ -53,7 +53,7 @@ class EnviarEmailActivity : Activity() {
             setPadding(padding, padding, padding, padding)
         }
 
-        spinnerModelo = Spinner(this)
+        spinnerModelo = Spinner(contextoTema(this))
 
         campoDestinatario = criarCampoTexto(this, "Email do professor")
         campoAssunto = criarCampoTexto(this, "Assunto")
@@ -159,7 +159,7 @@ class EnviarEmailActivity : Activity() {
             )
         )
 
-        val adaptador = ArrayAdapter(this, android.R.layout.simple_spinner_item, modelos.map { it.rotulo })
+        val adaptador = ArrayAdapter(contextoTema(this), android.R.layout.simple_spinner_item, modelos.map { it.rotulo })
         adaptador.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerModelo.adapter = adaptador
 
@@ -190,7 +190,7 @@ class EnviarEmailActivity : Activity() {
             return
         }
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(contextoTema(this))
             .setTitle("Trocar modelo")
             .setMessage("Substituir o texto atual pelo modelo escolhido?")
             .setPositiveButton("Substituir") { _, _ ->

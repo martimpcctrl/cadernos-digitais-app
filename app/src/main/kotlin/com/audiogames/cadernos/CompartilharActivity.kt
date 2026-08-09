@@ -92,7 +92,7 @@ class CompartilharActivity : Activity() {
 
     private fun confirmarRevogar() {
         val token = tokenGerado ?: return
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(contextoTema(this))
             .setTitle("Revogar link")
             .setMessage("Quem já tiver esse link não vai mais conseguir abrir. Tem certeza?")
             .setPositiveButton("Revogar") { _, _ ->
