@@ -14,13 +14,72 @@ import android.widget.TextView
 import android.widget.Toast
 
 object Cores {
-    const val PRIMARIA = "#3A6EA5"
-    const val FUNDO = "#F4F6F8"
-    const val TEXTO = "#1C1C1C"
-    const val TEXTO_SECUNDARIO = "#5B6470"
-    const val BORDA = "#D8DEE4"
-    const val ERRO = "#C0392B"
-    const val SUCESSO = "#2E7D46"
+    // Paleta clara (padrão)
+    private const val PRIMARIA_CLARA = "#3A6EA5"
+    private const val FUNDO_CLARO = "#F4F6F8"
+    private const val SUPERFICIE_CLARA = "#FFFFFF"
+    private const val TEXTO_CLARO = "#1C1C1C"
+    private const val TEXTO_SECUNDARIO_CLARO = "#5B6470"
+    private const val BORDA_CLARA = "#D8DEE4"
+    private const val ERRO_CLARO = "#C0392B"
+    private const val SUCESSO_CLARO = "#2E7D46"
+
+    // Paleta escura
+    private const val PRIMARIA_ESCURA = "#5B9BD9"
+    private const val FUNDO_ESCURO = "#14181C"
+    private const val SUPERFICIE_ESCURA = "#1E242A"
+    private const val TEXTO_ESCURO = "#EEF1F3"
+    private const val TEXTO_SECUNDARIO_ESCURO = "#93A0AB"
+    private const val BORDA_ESCURA = "#2C343C"
+    private const val ERRO_ESCURO = "#E57373"
+    private const val SUCESSO_ESCURO = "#66BB6A"
+
+    // Os valores "de verdade" que o resto do app usa - mudam quando o
+    // tema troca. Começam na paleta clara, mas `aplicarTema()` é
+    // chamado bem cedo (no início de cada tela) antes de qualquer
+    // coisa ser desenhada.
+    var PRIMARIA = PRIMARIA_CLARA
+        private set
+    var FUNDO = FUNDO_CLARO
+        private set
+    var SUPERFICIE = SUPERFICIE_CLARA
+        private set
+    var TEXTO = TEXTO_CLARO
+        private set
+    var TEXTO_SECUNDARIO = TEXTO_SECUNDARIO_CLARO
+        private set
+    var BORDA = BORDA_CLARA
+        private set
+    var ERRO = ERRO_CLARO
+        private set
+    var SUCESSO = SUCESSO_CLARO
+        private set
+
+    var escuroAtivo: Boolean = false
+        private set
+
+    fun aplicarTema(escuro: Boolean) {
+        escuroAtivo = escuro
+        if (escuro) {
+            PRIMARIA = PRIMARIA_ESCURA
+            FUNDO = FUNDO_ESCURO
+            SUPERFICIE = SUPERFICIE_ESCURA
+            TEXTO = TEXTO_ESCURO
+            TEXTO_SECUNDARIO = TEXTO_SECUNDARIO_ESCURO
+            BORDA = BORDA_ESCURA
+            ERRO = ERRO_ESCURO
+            SUCESSO = SUCESSO_ESCURO
+        } else {
+            PRIMARIA = PRIMARIA_CLARA
+            FUNDO = FUNDO_CLARO
+            SUPERFICIE = SUPERFICIE_CLARA
+            TEXTO = TEXTO_CLARO
+            TEXTO_SECUNDARIO = TEXTO_SECUNDARIO_CLARO
+            BORDA = BORDA_CLARA
+            ERRO = ERRO_CLARO
+            SUCESSO = SUCESSO_CLARO
+        }
+    }
 }
 
 fun dp(activity: Activity, valor: Int): Int =

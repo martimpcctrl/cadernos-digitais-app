@@ -29,6 +29,7 @@ class LoginActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         googleAuth = GoogleAuthManager(this)
 
         if (googleAuth.estaLogado()) {

@@ -20,6 +20,7 @@ class CompartilharActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         cadernoId = intent.getStringExtra("cadernoId") ?: ""
         cadernoNome = intent.getStringExtra("cadernoNome") ?: "caderno"
         montarTela()

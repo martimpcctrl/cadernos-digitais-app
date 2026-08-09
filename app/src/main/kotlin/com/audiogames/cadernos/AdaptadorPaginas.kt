@@ -34,7 +34,7 @@ class AdaptadorPaginas(
 
         val raiz = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
             setPadding(dp(activity, 10), dp(activity, 10), dp(activity, 14), dp(activity, 10))
             layoutParams = RecyclerView.LayoutParams(
                 RecyclerView.LayoutParams.MATCH_PARENT,

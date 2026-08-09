@@ -27,7 +27,7 @@ class AdaptadorCadernos(
 
         val raiz = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
             setPadding(dp(activity, 16), dp(activity, 14), dp(activity, 16), dp(activity, 14))
             layoutParams = RecyclerView.LayoutParams(
                 RecyclerView.LayoutParams.MATCH_PARENT,
@@ -68,7 +68,7 @@ class AdaptadorCadernos(
         )
 
         try {
-            holder.raiz.setBackgroundColor(Color.WHITE)
+            holder.raiz.setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
         } catch (e: Exception) { /* ignora cor inválida */ }
 
         holder.raiz.contentDescription = "${holder.nome.text}. ${holder.info.text}. Toque duas vezes pra abrir."

@@ -23,6 +23,7 @@ class PaginaActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         paginaId = intent.getStringExtra("paginaId") ?: run { finish(); return }
         titulo = intent.getStringExtra("titulo") ?: ""
         conteudo = intent.getStringExtra("conteudo") ?: ""

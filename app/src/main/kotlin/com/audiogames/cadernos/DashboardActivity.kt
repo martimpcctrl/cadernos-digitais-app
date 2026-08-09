@@ -7,9 +7,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Spinner
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -24,6 +29,7 @@ class DashboardActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         montarTela()
         verificarAtualizacao(manual = false)
     }
@@ -136,33 +142,74 @@ class DashboardActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(this@DashboardActivity, 24), dp(this@DashboardActivity, 16), dp(this@DashboardActivity, 24), 0)
         }
-        val campoNome = EditText(this).apply { hint = "Nome do caderno (obrigatório)" }
-        val campoMateria = EditText(this).apply { hint = "Matéria (opcional)" }
+
+        val rotuloMateria = TextView(this).apply { text = "Matéria" }
+        val seletorMateria = Spinner(this).apply {
+            adapter = ArrayAdapter(this@DashboardActivity, android.R.layout.simple_spinner_dropdown_item, Materias.nomesParaSelecao())
+        }
+
+        val campoNome = EditText(this).apply { hint = "Nome do caderno" }
+        val campoMateriaCustom = EditText(this).apply {
+            hint = "Digite o nome da matéria"
+            visibility = View.GONE
+        }
         val campoProfessor = EditText(this).apply { hint = "Nome do professor (opcional)" }
+
+        seletorMateria.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, posicao: Int, id: Long) {
+                val selecionado = seletorMateria.selectedItem as String
+                campoMateriaCustom.visibility = if (selecionado == Materias.OUTRA) View.VISIBLE else View.GONE
+                // Quando escolhe uma matéria da lista, o nome do caderno vira
+                // opcional (usamos o nome da matéria como título, se não
+                // digitar nada) - por isso atualiza a "dica" do campo.
+                val materiaEscolhida = posicao > 0 && selecionado != Materias.OUTRA
+                campoNome.hint = if (materiaEscolhida) "Nome do caderno (opcional)" else "Nome do caderno (obrigatório)"
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        layout.addView(rotuloMateria)
+        layout.addView(seletorMateria)
+        layout.addView(campoMateriaCustom)
         layout.addView(campoNome)
-        layout.addView(campoMateria)
         layout.addView(campoProfessor)
 
         AlertDialog.Builder(this)
             .setTitle("Novo caderno")
             .setView(layout)
             .setPositiveButton("Criar") { _, _ ->
-                val nome = campoNome.text.toString().trim()
-                if (nome.isEmpty()) {
-                    mostrarErro(this, "Digite um nome pro caderno.")
+                val posicaoSelecionada = seletorMateria.selectedItemPosition
+                val itemSelecionado = seletorMateria.selectedItem as String
+
+                val materia = when {
+                    itemSelecionado == Materias.OUTRA -> campoMateriaCustom.text.toString().trim()
+                    posicaoSelecionada > 0 -> itemSelecionado
+                    else -> ""
+                }
+
+                var nome = campoNome.text.toString().trim()
+
+                if (nome.isEmpty() && materia.isEmpty()) {
+                    mostrarErro(this, "Digite um nome pro caderno, ou escolha uma matéria da lista.")
                     return@setPositiveButton
                 }
-                criarCaderno(nome, campoMateria.text.toString().trim(), campoProfessor.text.toString().trim())
+                if (nome.isEmpty()) {
+                    nome = materia  // usa o nome da matéria como título, já que ela foi escolhida
+                }
+
+                val cor = if (materia.isNotEmpty()) Materias.corPara(materia) else ""
+                criarCaderno(nome, materia, campoProfessor.text.toString().trim(), cor)
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun criarCaderno(nome: String, materia: String, professor: String) {
+    private fun criarCaderno(nome: String, materia: String, professor: String, cor: String) {
         val corpo = JSONObject().apply {
             put("nome", nome)
             put("materia", materia)
             put("professor", professor)
+            put("cor", cor)
         }
         ApiClient.post("cadernos/criar.php", corpo, onSucesso = {
             mostrarAviso(this, "Caderno criado!")

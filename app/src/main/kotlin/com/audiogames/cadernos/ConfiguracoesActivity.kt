@@ -6,7 +6,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -20,11 +22,13 @@ class ConfiguracoesActivity : Activity() {
     private lateinit var campoEmailRemetente: EditText
     private lateinit var campoChaveApp: EditText
     private lateinit var campoEmailProfessor: EditText
+    private lateinit var checkboxEmailProfessor: CheckBox
     private lateinit var textoChaveStatus: TextView
     private lateinit var switchBloqueio: Switch
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         montarTela()
         carregarConfiguracoes()
     }
@@ -39,7 +43,17 @@ class ConfiguracoesActivity : Activity() {
         }
 
         campoNome = criarCampoTexto(this, "Seu nome (aparece nos e-mails que você envia)")
-        campoEmailProfessor = criarCampoTexto(this, "E-mail padrão do professor (opcional)")
+
+        checkboxEmailProfessor = CheckBox(this).apply {
+            text = "Quero definir um e-mail padrão do professor"
+        }
+        campoEmailProfessor = criarCampoTexto(this, "E-mail padrão do professor").apply {
+            visibility = View.GONE
+        }
+        checkboxEmailProfessor.setOnCheckedChangeListener { _, marcado ->
+            campoEmailProfessor.visibility = if (marcado) View.VISIBLE else View.GONE
+            if (!marcado) campoEmailProfessor.setText("")
+        }
 
         val botaoSalvarPerfil = criarBotaoPrimario(this, "Salvar") { salvarPerfil() }
         val botaoSair = criarBotaoSecundario(this, "Sair da conta") { confirmarSair() }
@@ -86,8 +100,21 @@ class ConfiguracoesActivity : Activity() {
         linhaBloqueio.addView(textoBloqueio)
         linhaBloqueio.addView(switchBloqueio)
 
+        val linhaTema = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(this@ConfiguracoesActivity, 8), 0, dp(this@ConfiguracoesActivity, 8))
+        }
+        val modoAtual = TemaManager.obterModo(this)
+        val botaoTemaClaro = criarBotaoTema("Claro", modoAtual == TemaManager.CLARO) { selecionarTema(TemaManager.CLARO) }
+        val botaoTemaEscuro = criarBotaoTema("Escuro", modoAtual == TemaManager.ESCURO) { selecionarTema(TemaManager.ESCURO) }
+        val botaoTemaSistema = criarBotaoTema("Automático", modoAtual == TemaManager.SISTEMA) { selecionarTema(TemaManager.SISTEMA) }
+        linhaTema.addView(botaoTemaClaro)
+        linhaTema.addView(botaoTemaEscuro)
+        linhaTema.addView(botaoTemaSistema)
+
         conteudo.addView(criarTextoSecao(this, "SEU PERFIL"))
         conteudo.addView(campoNome)
+        conteudo.addView(checkboxEmailProfessor)
         conteudo.addView(campoEmailProfessor)
         conteudo.addView(botaoSalvarPerfil)
 
@@ -102,6 +129,15 @@ class ConfiguracoesActivity : Activity() {
 
         conteudo.addView(criarTextoSecao(this, "SEGURANÇA"))
         conteudo.addView(linhaBloqueio)
+
+        conteudo.addView(criarTextoSecao(this, "APARÊNCIA"))
+        conteudo.addView(linhaTema)
+        conteudo.addView(TextView(this).apply {
+            text = "Feche e abra o app de novo depois de trocar, pra ver em todas as telas."
+            textSize = 12f
+            setTextColor(android.graphics.Color.parseColor(Cores.TEXTO_SECUNDARIO))
+            setPadding(0, 0, 0, dp(this@ConfiguracoesActivity, 12))
+        })
 
         conteudo.addView(criarTextoSecao(this, "CONTA"))
         conteudo.addView(botaoSair)
@@ -118,7 +154,10 @@ class ConfiguracoesActivity : Activity() {
         ApiClient.get("conta/configuracoes.php", onSucesso = { json ->
             val config = json.optJSONObject("configuracoes") ?: JSONObject()
             campoNome.setText(config.optString("nomeAluno"))
-            campoEmailProfessor.setText(config.optString("emailProfessorPadrao"))
+            val emailProfessorSalvo = config.optString("emailProfessorPadrao")
+            campoEmailProfessor.setText(emailProfessorSalvo)
+            checkboxEmailProfessor.isChecked = emailProfessorSalvo.isNotBlank()
+            campoEmailProfessor.visibility = if (emailProfessorSalvo.isNotBlank()) View.VISIBLE else View.GONE
             campoEmailRemetente.setText(config.optString("emailRemetente"))
             val temChave = config.optBoolean("temChaveApp", false)
             textoChaveStatus.text = if (temChave) {
@@ -199,9 +238,28 @@ class ConfiguracoesActivity : Activity() {
         }, 4000)
     }
 
+    private fun criarBotaoTema(rotulo: String, selecionado: Boolean, aoClicar: () -> Unit): android.widget.Button {
+        return android.widget.Button(this).apply {
+            text = if (selecionado) "✓ $rotulo" else rotulo
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = dp(this@ConfiguracoesActivity, 6)
+            }
+            if (selecionado) {
+                setBackgroundColor(android.graphics.Color.parseColor(Cores.PRIMARIA))
+                setTextColor(android.graphics.Color.WHITE)
+            }
+            setOnClickListener { aoClicar() }
+        }
+    }
+
+    private fun selecionarTema(modo: String) {
+        TemaManager.definirModo(this, modo)
+        recreate()  // já atualiza essa tela na hora, com as cores novas
+    }
+
     private fun alterarBloqueio(ativado: Boolean) {
         if (ativado && !BloqueioManager.biometriaDisponivel(this)) {
-            mostrarErro(this, "Esse aparelho não tem uma digital cadastrada. Cadastre uma nas configurações do Android primeiro.")
+            mostrarErro(this, "Esse aparelho não tem nenhuma trava configurada (digital, PIN, padrão ou senha). Configure uma nas configurações do Android primeiro.")
             switchBloqueio.isChecked = false
             return
         }

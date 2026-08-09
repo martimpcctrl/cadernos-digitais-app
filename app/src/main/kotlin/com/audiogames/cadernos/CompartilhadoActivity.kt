@@ -18,6 +18,7 @@ class CompartilhadoActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         token = intent?.data?.getQueryParameter("token")
         montarTela()
 

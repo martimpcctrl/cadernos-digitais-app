@@ -18,6 +18,7 @@ class ResumoDiaActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         montarTela()
         carregarResumo()
     }
@@ -74,7 +75,7 @@ class ResumoDiaActivity : Activity() {
     private fun linhaTarefa(titulo: String, nomeCaderno: String): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
             setPadding(dp(this@ResumoDiaActivity, 14), dp(this@ResumoDiaActivity, 12), dp(this@ResumoDiaActivity, 14), dp(this@ResumoDiaActivity, 12))
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 bottomMargin = dp(this@ResumoDiaActivity, 8)

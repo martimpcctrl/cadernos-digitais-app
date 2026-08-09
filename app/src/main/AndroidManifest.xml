@@ -34,7 +34,11 @@
         <activity android:name=".ConfiguracoesActivity" android:exported="false" />
         <activity android:name=".EnviarEmailActivity" android:exported="false" />
         <activity android:name=".CompartilharActivity" android:exported="false" />
-        <activity android:name=".TelaBloqueioActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity
+            android:name=".TelaBloqueioActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
         <activity android:name=".OcrActivity" android:exported="false" />
         <activity
             android:name=".CompartilhadoActivity"

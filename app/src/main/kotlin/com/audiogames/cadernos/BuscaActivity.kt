@@ -18,6 +18,7 @@ class BuscaActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         montarTela()
     }
 
@@ -110,7 +111,7 @@ class BuscaActivity : Activity() {
     private fun linhaResultado(titulo: String, subtitulo: String, aoClicar: () -> Unit): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
             setPadding(dp(this@BuscaActivity, 14), dp(this@BuscaActivity, 12), dp(this@BuscaActivity, 14), dp(this@BuscaActivity, 12))
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 bottomMargin = dp(this@BuscaActivity, 6)

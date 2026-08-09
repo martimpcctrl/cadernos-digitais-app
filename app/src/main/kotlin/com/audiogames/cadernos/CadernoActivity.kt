@@ -25,6 +25,7 @@ class CadernoActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TemaManager.aplicarTemaAtual(this)
         cadernoId = intent.getStringExtra("cadernoId") ?: run { finish(); return }
         cadernoNome = intent.getStringExtra("cadernoNome") ?: "Caderno"
         professor = intent.getStringExtra("professor") ?: ""

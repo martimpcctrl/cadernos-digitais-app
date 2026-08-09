@@ -20,10 +20,12 @@ object BloqueioManager {
         prefs(context).edit().putBoolean(CHAVE_ATIVADO, ativado).apply()
     }
 
-    /** Confirma se o aparelho tem biometria cadastrada e disponível pra usar. */
+    /** Confirma se o aparelho tem alguma forma de trava configurada (digital, PIN, padrão ou senha). */
     fun biometriaDisponivel(context: Context): Boolean {
         val gerenciador = BiometricManager.from(context)
-        val resultado = gerenciador.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)
+        val resultado = gerenciador.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        )
         return resultado == BiometricManager.BIOMETRIC_SUCCESS
     }
 
