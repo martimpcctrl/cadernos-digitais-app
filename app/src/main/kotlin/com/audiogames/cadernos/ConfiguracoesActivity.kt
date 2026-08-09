@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Switch
 import android.widget.TextView
 import org.json.JSONObject
 
@@ -20,6 +21,7 @@ class ConfiguracoesActivity : Activity() {
     private lateinit var campoChaveApp: EditText
     private lateinit var campoEmailProfessor: EditText
     private lateinit var textoChaveStatus: TextView
+    private lateinit var switchBloqueio: Switch
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +70,22 @@ class ConfiguracoesActivity : Activity() {
         val botaoSalvarEmail = criarBotaoPrimario(this, "Salvar configurações de e-mail") { salvarEmail() }
         val botaoTestar = criarBotaoSecundario(this, "Enviar e-mail de teste") { testarEnvio() }
 
+        val linhaBloqueio = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(this@ConfiguracoesActivity, 4), 0, dp(this@ConfiguracoesActivity, 8))
+        }
+        val textoBloqueio = TextView(this).apply {
+            text = "Bloqueio do aplicativo (pede sua digital toda vez que abrir)"
+            textSize = 15f
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        switchBloqueio = Switch(this).apply {
+            isChecked = BloqueioManager.estaAtivado(this@ConfiguracoesActivity)
+            setOnCheckedChangeListener { _, ativado -> alterarBloqueio(ativado) }
+        }
+        linhaBloqueio.addView(textoBloqueio)
+        linhaBloqueio.addView(switchBloqueio)
+
         conteudo.addView(criarTextoSecao(this, "SEU PERFIL"))
         conteudo.addView(campoNome)
         conteudo.addView(campoEmailProfessor)
@@ -81,6 +99,9 @@ class ConfiguracoesActivity : Activity() {
         conteudo.addView(textoChaveStatus)
         conteudo.addView(botaoSalvarEmail)
         conteudo.addView(botaoTestar)
+
+        conteudo.addView(criarTextoSecao(this, "SEGURANÇA"))
+        conteudo.addView(linhaBloqueio)
 
         conteudo.addView(criarTextoSecao(this, "CONTA"))
         conteudo.addView(botaoSair)
@@ -176,6 +197,20 @@ class ConfiguracoesActivity : Activity() {
         campoNome.postDelayed({
             if (!encontrou) mostrarAviso(this, "Você já está na versão mais recente.")
         }, 4000)
+    }
+
+    private fun alterarBloqueio(ativado: Boolean) {
+        if (ativado && !BloqueioManager.biometriaDisponivel(this)) {
+            mostrarErro(this, "Esse aparelho não tem uma digital cadastrada. Cadastre uma nas configurações do Android primeiro.")
+            switchBloqueio.isChecked = false
+            return
+        }
+        BloqueioManager.definirAtivado(this, ativado)
+        if (ativado) {
+            // Já desbloqueado nesse momento (acabou de configurar), não
+            // precisa pedir a digital de novo até sair e voltar no app.
+            CadernosApplication.desbloqueado = true
+        }
     }
 
     private fun confirmarSair() {

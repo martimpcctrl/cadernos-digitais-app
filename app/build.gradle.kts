@@ -63,4 +63,5 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("androidx.biometric:biometric:1.1.0")
 }
