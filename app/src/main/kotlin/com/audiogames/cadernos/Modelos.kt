@@ -32,7 +32,8 @@ data class Pagina(
     val tipo: String, // "nota" ou "tarefa"
     val dataEntrega: String,
     val concluida: Boolean,
-    val criadoEm: String
+    val criadoEm: String,
+    val temFoto: Boolean
 ) {
     val ehTarefa: Boolean get() = tipo == "tarefa"
 
@@ -45,7 +46,8 @@ data class Pagina(
             tipo = json.optString("tipo", "nota"),
             dataEntrega = json.optString("dataEntrega"),
             concluida = json.optBoolean("concluida", false),
-            criadoEm = json.optString("criadoEm")
+            criadoEm = json.optString("criadoEm"),
+            temFoto = json.optBoolean("temFoto", false)
         )
     }
 }

@@ -22,6 +22,9 @@ class CadernosApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        TokenFcmCache.iniciar(this)
+        CadernosMessagingService.criarCanalNotificacao(this)
+
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityStarted(activity: Activity) {
                 val estavaEmSegundoPlano = atividadesVisiveis == 0

@@ -62,6 +62,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("androidx.biometric:biometric:1.1.0")
 }

@@ -20,6 +20,7 @@ class PaginaActivity : Activity() {
     private var cadernoIdRef: String = ""
     private var cadernoNomeRef: String = ""
     private var professorRef: String = ""
+    private var temFoto: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +33,7 @@ class PaginaActivity : Activity() {
         cadernoIdRef = intent.getStringExtra("cadernoId") ?: ""
         cadernoNomeRef = intent.getStringExtra("cadernoNome") ?: ""
         professorRef = intent.getStringExtra("professor") ?: ""
+        temFoto = intent.getBooleanExtra("temFoto", false)
 
         montarTela(dataEntrega)
     }
@@ -65,12 +67,40 @@ class PaginaActivity : Activity() {
             setPadding(0, dp(this@PaginaActivity, 16), 0, dp(this@PaginaActivity, 24))
         }
 
-        val botaoEmail = criarBotaoSecundario(this, "Enviar por e-mail") { enviarPorEmail() }
-        val botaoExcluir = criarBotaoSecundario(this, "Excluir página") { confirmarExcluir() }
-
         corpo.addView(tituloView)
         corpo.addView(metaView)
         corpo.addView(conteudoView)
+
+        if (temFoto) {
+            val imagemView = android.widget.ImageView(this).apply {
+                adjustViewBounds = true
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                setPadding(0, 0, 0, dp(this@PaginaActivity, 20))
+                contentDescription = "Foto anexada à página"
+            }
+            val statusFoto = TextView(this).apply {
+                text = "Carregando foto..."
+                textSize = 13f
+                setTextColor(Color.parseColor(Cores.TEXTO_SECUNDARIO))
+                setPadding(0, 0, 0, dp(this@PaginaActivity, 8))
+            }
+            corpo.addView(statusFoto)
+            corpo.addView(imagemView)
+
+            ApiClient.getBinario("paginas/foto.php", mapOf("id" to paginaId), onSucesso = { bytes ->
+                val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bitmap != null) {
+                    imagemView.setImageBitmap(bitmap)
+                    statusFoto.visibility = android.view.View.GONE
+                } else {
+                    statusFoto.text = "Não consegui abrir a foto."
+                }
+            }, onErro = { mensagem -> statusFoto.text = mensagem })
+        }
+
+        val botaoEmail = criarBotaoSecundario(this, "Enviar por e-mail") { enviarPorEmail() }
+        val botaoExcluir = criarBotaoSecundario(this, "Excluir página") { confirmarExcluir() }
+
         corpo.addView(botaoEmail)
         corpo.addView(botaoExcluir)
 

@@ -130,6 +130,7 @@ class CadernoActivity : Activity() {
         intent.putExtra("tipo", pagina.tipo)
         intent.putExtra("dataEntrega", pagina.dataEntrega)
         intent.putExtra("concluida", pagina.concluida)
+        intent.putExtra("temFoto", pagina.temFoto)
         intent.putExtra("cadernoId", cadernoId)
         intent.putExtra("cadernoNome", cadernoNome)
         intent.putExtra("professor", professor)

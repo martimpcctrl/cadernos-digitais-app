@@ -98,9 +98,9 @@ class OcrActivity : Activity() {
         textoStatus.text = "Processando imagem..."
         Thread {
             try {
-                val base64 = comprimirParaBase64(arquivoFoto!!)
+                val (base64, arquivoComprimido) = comprimirEGuardar(arquivoFoto!!)
                 runOnUiThread { textoStatus.text = "Lendo o texto da foto..." }
-                enviarParaOcr(base64)
+                enviarParaOcr(base64, arquivoComprimido)
             } catch (e: Exception) {
                 runOnUiThread {
                     mostrarErro(this, "Não consegui processar a foto: ${e.message}")
@@ -111,15 +111,23 @@ class OcrActivity : Activity() {
         }.start()
     }
 
-    private fun comprimirParaBase64(arquivo: File): String {
+    /** Comprime a foto, salva um arquivo menor (que fica guardado), e apaga o original (tamanho cheio da câmera). */
+    private fun comprimirEGuardar(arquivoOriginal: File): Pair<String, File> {
         val opcoes = BitmapFactory.Options().apply { inSampleSize = 2 }
-        val bitmapOriginal = BitmapFactory.decodeFile(arquivo.absolutePath, opcoes)
+        val bitmapOriginal = BitmapFactory.decodeFile(arquivoOriginal.absolutePath, opcoes)
             ?: throw IllegalStateException("Não consegui ler a foto tirada.")
 
         val bitmap = redimensionarSeNecessario(bitmapOriginal, 1600)
-        val saida = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, saida)
-        return android.util.Base64.encodeToString(saida.toByteArray(), android.util.Base64.NO_WRAP)
+        val bytesComprimidos = ByteArrayOutputStream().also {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, it)
+        }.toByteArray()
+
+        val arquivoComprimido = File(arquivoOriginal.parentFile, "comprimida_${arquivoOriginal.name}")
+        arquivoComprimido.writeBytes(bytesComprimidos)
+        arquivoOriginal.delete()  // não precisa mais do tamanho cheio da câmera
+
+        val base64 = android.util.Base64.encodeToString(bytesComprimidos, android.util.Base64.NO_WRAP)
+        return Pair(base64, arquivoComprimido)
     }
 
     private fun redimensionarSeNecessario(bitmap: Bitmap, ladoMaximo: Int): Bitmap {
@@ -131,17 +139,19 @@ class OcrActivity : Activity() {
         return Bitmap.createScaledBitmap(bitmap, novaLargura, novaAltura, true)
     }
 
-    private fun enviarParaOcr(imagemBase64: String) {
+    private fun enviarParaOcr(imagemBase64: String, arquivoComprimido: File) {
         val corpo = JSONObject().apply { put("imagemBase64", imagemBase64) }
         ApiClient.post("ocr/extrair.php", corpo, onSucesso = { json ->
             val texto = json.optString("texto")
-            val resultado = Intent().putExtra("textoExtraido", texto)
+            val resultado = Intent().apply {
+                putExtra("textoExtraido", texto)
+                putExtra("caminhoFoto", arquivoComprimido.absolutePath)
+            }
             setResult(RESULT_OK, resultado)
-            arquivoFoto?.delete()
             finish()
         }, onErro = { mensagem ->
             mostrarErro(this, mensagem)
-            arquivoFoto?.delete()
+            arquivoComprimido.delete()
             finish()
         })
     }

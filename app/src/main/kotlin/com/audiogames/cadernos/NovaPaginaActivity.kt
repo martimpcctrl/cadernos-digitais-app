@@ -20,6 +20,7 @@ class NovaPaginaActivity : Activity() {
     private lateinit var grupoTipo: RadioGroup
     private lateinit var botaoData: android.widget.Button
     private var dataEntregaEscolhida: String? = null
+    private var caminhoFotoAnexada: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +36,11 @@ class NovaPaginaActivity : Activity() {
             val textoLido = data?.getStringExtra("textoExtraido") ?: return
             val atual = campoConteudo.text.toString()
             campoConteudo.setText(if (atual.isBlank()) textoLido else "$atual\n$textoLido")
+
+            caminhoFotoAnexada = data.getStringExtra("caminhoFoto")
+            if (caminhoFotoAnexada != null) {
+                mostrarAviso(this, "Foto anexada! Ela vai ser salva junto com a página.")
+            }
         }
     }
 
@@ -108,12 +114,31 @@ class NovaPaginaActivity : Activity() {
             put("conteudo", campoConteudo.text.toString())
             put("tipo", tipo)
             put("dataEntrega", dataEntregaEscolhida ?: "")
+            TokenFcmCache.obter()?.let { put("meuTokenFcm", it) }
+
+            caminhoFotoAnexada?.let { caminho ->
+                val arquivo = java.io.File(caminho)
+                if (arquivo.exists()) {
+                    val bytes = arquivo.readBytes()
+                    put("imagemBase64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+                }
+            }
         }
 
         ApiClient.post("paginas/criar.php", corpo, onSucesso = {
+            java.io.File(caminhoFotoAnexada ?: "").delete()  // não precisa mais guardar localmente, já subiu
             mostrarAviso(this, "Página salva!")
             finish()
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Se tirou foto mas não chegou a salvar a página (voltou sem
+        // salvar), não deixa o arquivo esquecido no celular. Se já foi
+        // salva com sucesso, o arquivo já não existe mais nesse ponto
+        // (apagado em salvarPagina()), então isso não faz nada nesse caso.
+        caminhoFotoAnexada?.let { java.io.File(it).delete() }
     }
 
     companion object {

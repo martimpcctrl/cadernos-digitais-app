@@ -219,6 +219,7 @@ class LoginActivity : Activity() {
     }
 
     private fun irParaDashboard() {
+        CadernosMessagingService.registrarTokenAtual()
         startActivity(Intent(this, DashboardActivity::class.java))
         finish()
     }

@@ -32,6 +32,17 @@ class DashboardActivity : Activity() {
         TemaManager.aplicarTemaAtual(this)
         montarTela()
         verificarAtualizacao(manual = false)
+        pedirPermissaoNotificacao()
+        CadernosMessagingService.registrarTokenAtual()
+    }
+
+    private fun pedirPermissaoNotificacao() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            val permissao = android.Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permissao) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permissao), 1001)
+            }
+        }
     }
 
     private fun verificarAtualizacao(manual: Boolean) {
@@ -210,6 +221,7 @@ class DashboardActivity : Activity() {
             put("materia", materia)
             put("professor", professor)
             put("cor", cor)
+            TokenFcmCache.obter()?.let { put("meuTokenFcm", it) }
         }
         ApiClient.post("cadernos/criar.php", corpo, onSucesso = {
             mostrarAviso(this, "Caderno criado!")
