@@ -30,7 +30,10 @@ object Materias {
 
     /** Nomes pra popular o seletor - a lista de matérias, mais "Escolher..." no topo e "Outra" no fim. */
     fun nomesParaSelecao(): List<String> {
-        return listOf("Escolher matéria (opcional)...") + LISTA.map { it.nome } + OUTRA
+        val nomes = mutableListOf("Escolher matéria (opcional)...")
+        nomes.addAll(LISTA.map { it.nome })
+        nomes.add(OUTRA)
+        return nomes
     }
 
     fun corPara(nomeMateria: String): String {

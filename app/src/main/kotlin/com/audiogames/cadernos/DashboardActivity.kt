@@ -18,6 +18,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import org.json.JSONArray
 import org.json.JSONObject
 
 class DashboardActivity : Activity() {
@@ -226,7 +227,9 @@ class DashboardActivity : Activity() {
         } else {
             // Já tem professor cadastrado - mostra a lista pra escolher,
             // com uma opção de adicionar um novo no final.
-            val opcoes = listOf("Nenhum") + nomesProfessoresExistentes + "+ Novo professor..."
+            val opcoes = mutableListOf("Nenhum")
+            opcoes.addAll(nomesProfessoresExistentes)
+            opcoes.add("+ Novo professor...")
             seletorProfessor = Spinner(contextoTema(this)).apply {
                 adapter = ArrayAdapter(contextoTema(this@DashboardActivity), android.R.layout.simple_spinner_dropdown_item, opcoes)
             }
