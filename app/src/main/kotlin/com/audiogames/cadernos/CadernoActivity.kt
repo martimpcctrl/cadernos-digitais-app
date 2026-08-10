@@ -149,7 +149,10 @@ class CadernoActivity : Activity() {
             put("paginaId", pagina.id)
             put("concluida", concluida)
         }
-        ApiClient.post("paginas/concluir.php", corpo, onSucesso = { carregarPaginas() }, onErro = { mensagem ->
+        ApiClient.post("paginas/concluir.php", corpo, onSucesso = {
+            carregarPaginas()
+            TarefasWidgetProvider.atualizarTodosOsWidgets(this)
+        }, onErro = { mensagem ->
             mostrarErro(this, mensagem)
             carregarPaginas()
         })

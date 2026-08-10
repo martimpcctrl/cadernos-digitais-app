@@ -34,6 +34,10 @@ class DashboardActivity : Activity() {
         verificarAtualizacao(manual = false)
         pedirPermissaoNotificacao()
         CadernosMessagingService.registrarTokenAtual()
+
+        if (intent.getBooleanExtra("abrirNovoCaderno", false)) {
+            abrirDialogoNovoCaderno()
+        }
     }
 
     private fun pedirPermissaoNotificacao() {
@@ -347,6 +351,7 @@ class DashboardActivity : Activity() {
         ApiClient.post("cadernos/criar.php", corpo, onSucesso = {
             mostrarAviso(this, "Caderno criado!")
             carregarCadernos()
+            TarefasWidgetProvider.atualizarTodosOsWidgets(this)
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
     }
 }

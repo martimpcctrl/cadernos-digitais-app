@@ -151,6 +151,7 @@ class NovaPaginaActivity : Activity() {
         ApiClient.post("paginas/criar.php", corpo, onSucesso = {
             limparFotosTemporarias()
             mostrarAviso(this, "Página salva!")
+            TarefasWidgetProvider.atualizarTodosOsWidgets(this)
             finish()
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
     }

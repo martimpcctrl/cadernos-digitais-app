@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#3A6EA5"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/widget_titulo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cadernos Digitais"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Carregando..."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:paddingTop="4dp"
+        android:paddingBottom="6dp" />
+
+    <TextView
+        android:id="@+id/widget_tarefa_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#EAF1FA"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/widget_tarefa_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#EAF1FA"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/widget_tarefa_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#EAF1FA"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
+
+        <Button
+            android:id="@+id/widget_botao_nova_pagina"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="+ Página"
+            android:textSize="11sp"
+            android:textAllCaps="false"
+            android:background="#5B9BD9"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/widget_botao_novo_caderno"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="+ Caderno"
+            android:textSize="11sp"
+            android:textAllCaps="false"
+            android:background="#5B9BD9"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+</LinearLayout>
