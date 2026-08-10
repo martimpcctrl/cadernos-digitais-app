@@ -25,6 +25,7 @@ class ConfigContaActivity : Activity() {
 
         conteudo.addView(criarBotaoSecundario(this, "Sair da conta") { confirmarSair() })
         conteudo.addView(criarBotaoSecundario(this, "Verificar atualizações") { verificarAtualizacaoManual() })
+        conteudo.addView(criarBotaoSecundario(this, "🔧 Testar notificação (diagnóstico)") { testarNotificacao() })
 
         raiz.addView(conteudo)
         setContentView(raiz)
@@ -51,6 +52,17 @@ class ConfigContaActivity : Activity() {
         window.decorView.postDelayed({
             if (!encontrou) mostrarAviso(this, "Você já está na versão mais recente.")
         }, 4000)
+    }
+
+    private fun testarNotificacao() {
+        mostrarAviso(this, "Testando, aguarde...")
+        ApiClient.get("notificacoes/testar.php", onSucesso = { json ->
+            AlertDialog.Builder(contextoTema(this))
+                .setTitle("Resultado do diagnóstico")
+                .setMessage(json.toString(2))
+                .setPositiveButton("OK", null)
+                .show()
+        }, onErro = { mensagem -> mostrarErro(this, "Erro: $mensagem") })
     }
 
     private fun confirmarSair() {
