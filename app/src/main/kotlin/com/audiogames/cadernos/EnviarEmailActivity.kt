@@ -76,13 +76,36 @@ class EnviarEmailActivity : Activity() {
     }
 
     private fun carregarDadosEMontarModelos() {
-        // Preenche o destinatário com o professor padrão salvo, se tiver.
+        var emailPadraoGenerico = ""
+
         ApiClient.get("conta/configuracoes.php", onSucesso = { json ->
             val config = json.optJSONObject("configuracoes") ?: JSONObject()
-            val emailPadrao = config.optString("emailProfessorPadrao")
-            if (emailPadrao.isNotBlank()) campoDestinatario.setText(emailPadrao)
+            emailPadraoGenerico = config.optString("emailProfessorPadrao")
             val nomeSalvo = config.optString("nomeAluno")
             if (nomeSalvo.isNotBlank()) alunoNome = nomeSalvo
+
+            // Só depois de saber o padrão genérico, tenta achar um e-mail
+            // específico cadastrado pra esse professor - se achar, ele tem
+            // prioridade (é mais preciso que o padrão genérico).
+            if (professor.isNotBlank()) {
+                ApiClient.get("professores/listar.php", onSucesso = { jsonProf ->
+                    val lista = jsonProf.optJSONArray("professores") ?: org.json.JSONArray()
+                    var emailEncontrado = ""
+                    for (i in 0 until lista.length()) {
+                        val p = lista.getJSONObject(i)
+                        if (p.optString("nome").equals(professor, ignoreCase = true)) {
+                            emailEncontrado = p.optString("email")
+                            break
+                        }
+                    }
+                    val emailFinal = emailEncontrado.ifBlank { emailPadraoGenerico }
+                    if (emailFinal.isNotBlank()) campoDestinatario.setText(emailFinal)
+                }, onErro = {
+                    if (emailPadraoGenerico.isNotBlank()) campoDestinatario.setText(emailPadraoGenerico)
+                })
+            } else if (emailPadraoGenerico.isNotBlank()) {
+                campoDestinatario.setText(emailPadraoGenerico)
+            }
         }, onErro = { /* silencioso */ })
 
         if (cadernoId.isEmpty()) {

@@ -79,7 +79,7 @@ class DashboardActivity : Activity() {
         acoes.addView(botaoAcao("Buscar") { startActivity(Intent(this, BuscaActivity::class.java)) })
         acoes.addView(botaoAcao("Config.") { startActivity(Intent(this, ConfiguracoesActivity::class.java)) })
 
-        adaptador = AdaptadorCadernos(this, emptyList()) { caderno -> abrirCaderno(caderno) }
+        adaptador = AdaptadorCadernos(this, emptyList(), { caderno -> abrirCaderno(caderno) }, { caderno -> abrirDialogoEditarCaderno(caderno) })
         lista = RecyclerView(this).apply {
             layoutManager = LinearLayoutManager(this@DashboardActivity)
             adapter = adaptador
@@ -149,6 +149,19 @@ class DashboardActivity : Activity() {
     }
 
     private fun abrirDialogoNovoCaderno() {
+        // Busca os professores já cadastrados ANTES de abrir o diálogo, pra
+        // já montar a interface certa desde o início (lista pra escolher,
+        // se já tiver algum; ou um campo de texto simples, se nunca usou
+        // essa parte - importante pra quem não usa o app pra escola não
+        // ver um menu de professor estranho, sem sentido nenhum).
+        ApiClient.get("professores/listar.php", onSucesso = { json ->
+            abrirDialogoComProfessores(json.optJSONArray("professores") ?: JSONArray())
+        }, onErro = {
+            abrirDialogoComProfessores(JSONArray()) // se der erro, trata como se não tivesse nenhum cadastrado
+        })
+    }
+
+    private fun abrirDialogoComProfessores(professoresExistentes: JSONArray) {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(this@DashboardActivity, 24), dp(this@DashboardActivity, 16), dp(this@DashboardActivity, 24), 0)
@@ -164,15 +177,11 @@ class DashboardActivity : Activity() {
             hint = "Digite o nome da matéria"
             visibility = View.GONE
         }
-        val campoProfessor = EditText(this).apply { hint = "Nome do professor (opcional)" }
 
         seletorMateria.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, posicao: Int, id: Long) {
                 val selecionado = seletorMateria.selectedItem as String
                 campoMateriaCustom.visibility = if (selecionado == Materias.OUTRA) View.VISIBLE else View.GONE
-                // Quando escolhe uma matéria da lista, o nome do caderno vira
-                // opcional (usamos o nome da matéria como título, se não
-                // digitar nada) - por isso atualiza a "dica" do campo.
                 val materiaEscolhida = posicao > 0 && selecionado != Materias.OUTRA
                 campoNome.hint = if (materiaEscolhida) "Nome do caderno (opcional)" else "Nome do caderno (obrigatório)"
             }
@@ -183,7 +192,55 @@ class DashboardActivity : Activity() {
         layout.addView(seletorMateria)
         layout.addView(campoMateriaCustom)
         layout.addView(campoNome)
-        layout.addView(campoProfessor)
+
+        // -------------------- PROFESSOR --------------------
+        val nomesProfessoresExistentes = (0 until professoresExistentes.length())
+            .map { professoresExistentes.getJSONObject(it).optString("nome") }
+
+        val campoNovoProfessorNome = EditText(this).apply { hint = "Nome do professor" }
+        val campoNovoProfessorEmail = EditText(this).apply {
+            hint = "E-mail do professor (opcional, fica salvo pras próximas vezes)"
+            visibility = View.GONE
+        }
+        campoNovoProfessorNome.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) {
+                campoNovoProfessorEmail.visibility = if (s?.isNotBlank() == true) View.VISIBLE else View.GONE
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        var seletorProfessor: Spinner? = null
+
+        if (nomesProfessoresExistentes.isEmpty()) {
+            // Ninguém cadastrado ainda - só um campo de texto simples,
+            // igual a antes. Sem menu nenhum, sem parecer estranho pra
+            // quem não usa isso pra escola.
+            layout.addView(criarTextoSecao(this, "PROFESSOR"))
+            layout.addView(campoNovoProfessorNome)
+            layout.addView(campoNovoProfessorEmail)
+        } else {
+            // Já tem professor cadastrado - mostra a lista pra escolher,
+            // com uma opção de adicionar um novo no final.
+            val opcoes = listOf("Nenhum") + nomesProfessoresExistentes + "+ Novo professor..."
+            seletorProfessor = Spinner(contextoTema(this)).apply {
+                adapter = ArrayAdapter(contextoTema(this@DashboardActivity), android.R.layout.simple_spinner_dropdown_item, opcoes)
+            }
+            seletorProfessor.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, posicao: Int, id: Long) {
+                    val ehNovo = posicao == opcoes.size - 1
+                    campoNovoProfessorNome.visibility = if (ehNovo) View.VISIBLE else View.GONE
+                    campoNovoProfessorEmail.visibility = View.GONE
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+            campoNovoProfessorNome.visibility = View.GONE
+
+            layout.addView(criarTextoSecao(this, "PROFESSOR"))
+            layout.addView(seletorProfessor)
+            layout.addView(campoNovoProfessorNome)
+            layout.addView(campoNovoProfessorEmail)
+        }
 
         AlertDialog.Builder(contextoTema(this))
             .setTitle("Novo caderno")
@@ -205,11 +262,75 @@ class DashboardActivity : Activity() {
                     return@setPositiveButton
                 }
                 if (nome.isEmpty()) {
-                    nome = materia  // usa o nome da matéria como título, já que ela foi escolhida
+                    nome = materia
                 }
 
+                // Decide o nome do professor: ou escolheu um já cadastrado,
+                // ou digitou um novo (com ou sem lista de opções na tela).
+                val professorEscolhidoDaLista = seletorProfessor?.let {
+                    val posicao = it.selectedItemPosition
+                    if (posicao in 1 until (nomesProfessoresExistentes.size + 1)) it.selectedItem as String else null
+                }
+                val professor = professorEscolhidoDaLista ?: campoNovoProfessorNome.text.toString().trim()
+                val emailNovoProfessor = campoNovoProfessorEmail.text.toString().trim()
+
                 val cor = if (materia.isNotEmpty()) Materias.corPara(materia) else ""
-                criarCaderno(nome, materia, campoProfessor.text.toString().trim(), cor)
+
+                // Se digitou um professor novo com e-mail, cadastra ele
+                // também (fica salvo pras próximas vezes).
+                if (professorEscolhidoDaLista == null && professor.isNotEmpty() && emailNovoProfessor.isNotEmpty()) {
+                    val corpoProfessor = JSONObject().apply {
+                        put("nome", professor)
+                        put("email", emailNovoProfessor)
+                    }
+                    ApiClient.post("professores/salvar.php", corpoProfessor, onSucesso = {}, onErro = {})
+                }
+
+                criarCaderno(nome, materia, professor, cor)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun abrirDialogoEditarCaderno(caderno: Caderno) {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(this@DashboardActivity, 24), dp(this@DashboardActivity, 16), dp(this@DashboardActivity, 24), 0)
+        }
+        val campoNome = EditText(this).apply { hint = "Nome do caderno"; setText(caderno.nome) }
+        val campoMateria = EditText(this).apply { hint = "Matéria (opcional)"; setText(caderno.materia) }
+        val campoProfessor = EditText(this).apply { hint = "Nome do professor (opcional)"; setText(caderno.professor) }
+        layout.addView(campoNome)
+        layout.addView(campoMateria)
+        layout.addView(campoProfessor)
+
+        AlertDialog.Builder(contextoTema(this))
+            .setTitle("Editar caderno")
+            .setView(layout)
+            .setPositiveButton("Salvar") { _, _ ->
+                val nome = campoNome.text.toString().trim()
+                if (nome.isEmpty()) {
+                    mostrarErro(this, "Digite um nome pro caderno.")
+                    return@setPositiveButton
+                }
+                val materia = campoMateria.text.toString().trim()
+                val cor = if (materia.isNotEmpty() && materia != caderno.materia) {
+                    Materias.corPara(materia)  // matéria mudou - tenta achar a cor certa (ou usa o azul padrão)
+                } else {
+                    caderno.cor  // não mudou (ou ficou vazia) - mantém a cor que já tinha
+                }
+
+                val corpo = JSONObject().apply {
+                    put("cadernoId", caderno.id)
+                    put("nome", nome)
+                    put("materia", materia)
+                    put("professor", campoProfessor.text.toString().trim())
+                    put("cor", cor)
+                }
+                ApiClient.post("cadernos/editar.php", corpo, onSucesso = {
+                    mostrarAviso(this, "Caderno atualizado!")
+                    carregarCadernos()
+                }, onErro = { mensagem -> mostrarErro(this, mensagem) })
             }
             .setNegativeButton("Cancelar", null)
             .show()

@@ -64,7 +64,8 @@ class CadernoActivity : Activity() {
             this,
             emptyList(),
             aoClicar = { pagina -> abrirPagina(pagina) },
-            aoMarcarConcluida = { pagina, marcada -> marcarConcluida(pagina, marcada) }
+            aoMarcarConcluida = { pagina, marcada -> marcarConcluida(pagina, marcada) },
+            aoSegurar = { pagina -> abrirDialogoEditarPagina(pagina) }
         )
         lista = RecyclerView(this).apply {
             layoutManager = LinearLayoutManager(this@CadernoActivity)
@@ -130,7 +131,7 @@ class CadernoActivity : Activity() {
         intent.putExtra("tipo", pagina.tipo)
         intent.putExtra("dataEntrega", pagina.dataEntrega)
         intent.putExtra("concluida", pagina.concluida)
-        intent.putExtra("temFoto", pagina.temFoto)
+        intent.putExtra("totalFotos", pagina.totalFotos)
         intent.putExtra("cadernoId", cadernoId)
         intent.putExtra("cadernoNome", cadernoNome)
         intent.putExtra("professor", professor)
@@ -152,6 +153,77 @@ class CadernoActivity : Activity() {
             mostrarErro(this, mensagem)
             carregarPaginas()
         })
+    }
+
+    private fun abrirDialogoEditarPagina(pagina: Pagina) {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(this@CadernoActivity, 24), dp(this@CadernoActivity, 16), dp(this@CadernoActivity, 24), 0)
+        }
+        val campoTitulo = android.widget.EditText(this).apply { hint = "Título"; setText(pagina.titulo) }
+        val campoConteudo = android.widget.EditText(this).apply {
+            hint = "Conteúdo"
+            setText(pagina.conteudo)
+            minLines = 4
+            gravity = android.view.Gravity.TOP
+        }
+
+        val grupoTipo = android.widget.RadioGroup(contextoTema(this)).apply {
+            orientation = android.widget.RadioGroup.HORIZONTAL
+            val opcaoNota = android.widget.RadioButton(contextoTema(this@CadernoActivity)).apply { text = "Nota"; id = 1 }
+            val opcaoTarefa = android.widget.RadioButton(contextoTema(this@CadernoActivity)).apply { text = "Tarefa"; id = 2 }
+            addView(opcaoNota)
+            addView(opcaoTarefa)
+            check(if (pagina.ehTarefa) 2 else 1)
+        }
+
+        var dataEntregaEscolhida: String? = pagina.dataEntrega.ifBlank { null }
+        val botaoData = criarBotaoSecundario(
+            this,
+            if (dataEntregaEscolhida != null) "Entrega: $dataEntregaEscolhida" else "Escolher data de entrega"
+        ) {
+            val agora = java.util.Calendar.getInstance()
+            android.app.DatePickerDialog(this, { _, ano, mes, dia ->
+                dataEntregaEscolhida = "%04d-%02d-%02d".format(ano, mes + 1, dia)
+            }, agora.get(java.util.Calendar.YEAR), agora.get(java.util.Calendar.MONTH), agora.get(java.util.Calendar.DAY_OF_MONTH)).show()
+        }
+        botaoData.visibility = if (pagina.ehTarefa) android.view.View.VISIBLE else android.view.View.GONE
+        grupoTipo.setOnCheckedChangeListener { _, checkedId ->
+            botaoData.visibility = if (checkedId == 2) android.view.View.VISIBLE else android.view.View.GONE
+        }
+
+        layout.addView(campoTitulo)
+        layout.addView(criarTextoSecao(this, "Tipo"))
+        layout.addView(grupoTipo)
+        layout.addView(botaoData)
+        layout.addView(criarTextoSecao(this, "Conteúdo"))
+        layout.addView(campoConteudo)
+
+        AlertDialog.Builder(contextoTema(this))
+            .setTitle("Editar página")
+            .setView(android.widget.ScrollView(this).apply { addView(layout) })
+            .setPositiveButton("Salvar") { _, _ ->
+                val titulo = campoTitulo.text.toString().trim()
+                if (titulo.isEmpty()) {
+                    mostrarErro(this, "Digite um título pra página.")
+                    return@setPositiveButton
+                }
+                val tipo = if (grupoTipo.checkedRadioButtonId == 2) "tarefa" else "nota"
+
+                val corpo = JSONObject().apply {
+                    put("paginaId", pagina.id)
+                    put("titulo", titulo)
+                    put("conteudo", campoConteudo.text.toString())
+                    put("tipo", tipo)
+                    put("dataEntrega", if (tipo == "tarefa") (dataEntregaEscolhida ?: "") else "")
+                }
+                ApiClient.post("paginas/editar.php", corpo, onSucesso = {
+                    mostrarAviso(this, "Página atualizada!")
+                    carregarPaginas()
+                }, onErro = { mensagem -> mostrarErro(this, mensagem) })
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun abrirResumoIa() {

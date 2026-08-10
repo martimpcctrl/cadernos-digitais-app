@@ -33,9 +33,26 @@ class ConfiguracoesActivity : Activity() {
         conteudo.addView(itemCategoria("Aparência", "Tema claro, escuro ou automático") {
             startActivity(Intent(this, ConfigAparenciaActivity::class.java))
         })
-        conteudo.addView(itemCategoria("Seu perfil", "Nome e e-mail do professor") {
+        conteudo.addView(itemCategoria("Seu perfil", "Nome e e-mail padrão do professor") {
             startActivity(Intent(this, ConfigPerfilActivity::class.java))
         })
+
+        // O item de "Professores" só aparece se já tiver pelo menos um
+        // cadastrado - do contrário, fica um menu sem sentido nenhum pra
+        // quem não usa o app pra escola.
+        val posicaoProfessores = conteudo.childCount
+        ApiClient.get("professores/listar.php", onSucesso = { json ->
+            val professores = json.optJSONArray("professores")
+            if (professores != null && professores.length() > 0) {
+                conteudo.addView(
+                    itemCategoria("Professores", "Cadastre o e-mail de cada professor") {
+                        startActivity(Intent(this, ProfessoresActivity::class.java))
+                    },
+                    posicaoProfessores
+                )
+            }
+        }, onErro = { /* silencioso - se der erro, só não mostra o item, sem travar a tela */ })
+
         conteudo.addView(itemCategoria("Envio de e-mail", "Configurar o e-mail que envia pros professores") {
             startActivity(Intent(this, ConfigEmailActivity::class.java))
         })

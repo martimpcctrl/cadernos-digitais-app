@@ -20,7 +20,7 @@ class PaginaActivity : Activity() {
     private var cadernoIdRef: String = ""
     private var cadernoNomeRef: String = ""
     private var professorRef: String = ""
-    private var temFoto: Boolean = false
+    private var totalFotos: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +33,7 @@ class PaginaActivity : Activity() {
         cadernoIdRef = intent.getStringExtra("cadernoId") ?: ""
         cadernoNomeRef = intent.getStringExtra("cadernoNome") ?: ""
         professorRef = intent.getStringExtra("professor") ?: ""
-        temFoto = intent.getBooleanExtra("temFoto", false)
+        totalFotos = intent.getIntExtra("totalFotos", 0)
 
         montarTela(dataEntrega)
     }
@@ -71,31 +71,33 @@ class PaginaActivity : Activity() {
         corpo.addView(metaView)
         corpo.addView(conteudoView)
 
-        if (temFoto) {
-            val imagemView = android.widget.ImageView(this).apply {
-                adjustViewBounds = true
-                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                setPadding(0, 0, 0, dp(this@PaginaActivity, 20))
-                contentDescription = "Foto anexada à página"
-            }
-            val statusFoto = TextView(this).apply {
-                text = "Carregando foto..."
-                textSize = 13f
-                setTextColor(Color.parseColor(Cores.TEXTO_SECUNDARIO))
-                setPadding(0, 0, 0, dp(this@PaginaActivity, 8))
-            }
-            corpo.addView(statusFoto)
-            corpo.addView(imagemView)
-
-            ApiClient.getBinario("paginas/foto.php", mapOf("id" to paginaId), onSucesso = { bytes ->
-                val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                if (bitmap != null) {
-                    imagemView.setImageBitmap(bitmap)
-                    statusFoto.visibility = android.view.View.GONE
-                } else {
-                    statusFoto.text = "Não consegui abrir a foto."
+        if (totalFotos > 0) {
+            for (indice in 0 until totalFotos) {
+                val statusFoto = TextView(this).apply {
+                    text = if (totalFotos == 1) "Carregando foto..." else "Carregando foto ${indice + 1} de $totalFotos..."
+                    textSize = 13f
+                    setTextColor(Color.parseColor(Cores.TEXTO_SECUNDARIO))
+                    setPadding(0, 0, 0, dp(this@PaginaActivity, 8))
                 }
-            }, onErro = { mensagem -> statusFoto.text = mensagem })
+                val imagemView = android.widget.ImageView(this).apply {
+                    adjustViewBounds = true
+                    scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                    setPadding(0, 0, 0, dp(this@PaginaActivity, 20))
+                    contentDescription = if (totalFotos == 1) "Foto anexada à página" else "Foto ${indice + 1} de $totalFotos anexada à página"
+                }
+                corpo.addView(statusFoto)
+                corpo.addView(imagemView)
+
+                ApiClient.getBinario("paginas/foto.php", mapOf("id" to paginaId, "indice" to indice.toString()), onSucesso = { bytes ->
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    if (bitmap != null) {
+                        imagemView.setImageBitmap(bitmap)
+                        statusFoto.visibility = android.view.View.GONE
+                    } else {
+                        statusFoto.text = "Não consegui abrir essa foto."
+                    }
+                }, onErro = { mensagem -> statusFoto.text = mensagem })
+            }
         }
 
         val botaoEmail = criarBotaoSecundario(this, "Enviar por e-mail") { enviarPorEmail() }

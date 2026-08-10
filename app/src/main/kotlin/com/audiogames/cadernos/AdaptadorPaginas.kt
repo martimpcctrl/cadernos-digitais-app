@@ -13,7 +13,8 @@ class AdaptadorPaginas(
     private val activity: Activity,
     private var itens: List<Pagina>,
     private val aoClicar: (Pagina) -> Unit,
-    private val aoMarcarConcluida: (Pagina, Boolean) -> Unit
+    private val aoMarcarConcluida: (Pagina, Boolean) -> Unit,
+    private val aoSegurar: (Pagina) -> Unit
 ) : RecyclerView.Adapter<AdaptadorPaginas.ViewHolder>() {
 
     class ViewHolder(
@@ -84,8 +85,9 @@ class AdaptadorPaginas(
         holder.check.setOnCheckedChangeListener { _, marcado -> aoMarcarConcluida(pagina, marcado) }
 
         holder.raiz.contentDescription = "${if (pagina.ehTarefa) "Tarefa" else "Nota"}: ${pagina.titulo}." +
-            if (pagina.concluida) " Concluída." else ""
+            (if (pagina.concluida) " Concluída." else "") + " Toque e segure pra editar."
         holder.raiz.setOnClickListener { aoClicar(pagina) }
+        holder.raiz.setOnLongClickListener { aoSegurar(pagina); true }
     }
 
     override fun getItemCount(): Int = itens.size

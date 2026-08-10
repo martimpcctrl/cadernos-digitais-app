@@ -19,8 +19,10 @@ class NovaPaginaActivity : Activity() {
     private lateinit var campoConteudo: android.widget.EditText
     private lateinit var grupoTipo: RadioGroup
     private lateinit var botaoData: android.widget.Button
+    private lateinit var botaoOcr: android.widget.Button
+    private lateinit var textoFotos: android.widget.TextView
     private var dataEntregaEscolhida: String? = null
-    private var caminhoFotoAnexada: String? = null
+    private val caminhosFotos = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,11 +39,22 @@ class NovaPaginaActivity : Activity() {
             val atual = campoConteudo.text.toString()
             campoConteudo.setText(if (atual.isBlank()) textoLido else "$atual\n$textoLido")
 
-            caminhoFotoAnexada = data.getStringExtra("caminhoFoto")
-            if (caminhoFotoAnexada != null) {
-                mostrarAviso(this, "Foto anexada! Ela vai ser salva junto com a página.")
+            val caminhoNovo = data.getStringExtra("caminhoFoto")
+            if (caminhoNovo != null) {
+                caminhosFotos.add(caminhoNovo)
+                atualizarTextoFotos()
             }
         }
+    }
+
+    private fun atualizarTextoFotos() {
+        val quantidade = caminhosFotos.size
+        textoFotos.text = when (quantidade) {
+            0 -> ""
+            1 -> "1 foto anexada."
+            else -> "$quantidade fotos anexadas."
+        }
+        botaoOcr.text = if (quantidade == 0) "📷 Lousa Digital (tirar foto e extrair texto)" else "📷 Tirar outra foto"
     }
 
     private fun montarTela() {
@@ -68,8 +81,13 @@ class NovaPaginaActivity : Activity() {
             visibility = android.view.View.GONE
         }
 
-        val botaoOcr = criarBotaoSecundario(this, "📷 Lousa Digital (tirar foto e extrair texto)") {
+        botaoOcr = criarBotaoSecundario(this, "📷 Lousa Digital (tirar foto e extrair texto)") {
             startActivityForResult(Intent(this, OcrActivity::class.java), REQUEST_CODE_OCR)
+        }
+
+        textoFotos = android.widget.TextView(this).apply {
+            textSize = 12f
+            setTextColor(android.graphics.Color.parseColor(Cores.TEXTO_SECUNDARIO))
         }
 
         campoConteudo = criarCampoTexto(this, "Conteúdo da página", multilinha = true)
@@ -82,6 +100,7 @@ class NovaPaginaActivity : Activity() {
         conteudo.addView(botaoData)
         conteudo.addView(criarTextoSecao(this, "Conteúdo"))
         conteudo.addView(botaoOcr)
+        conteudo.addView(textoFotos)
         conteudo.addView(campoConteudo)
         conteudo.addView(botaoSalvar)
 
@@ -116,29 +135,40 @@ class NovaPaginaActivity : Activity() {
             put("dataEntrega", dataEntregaEscolhida ?: "")
             TokenFcmCache.obter()?.let { put("meuTokenFcm", it) }
 
-            caminhoFotoAnexada?.let { caminho ->
-                val arquivo = java.io.File(caminho)
-                if (arquivo.exists()) {
-                    val bytes = arquivo.readBytes()
-                    put("imagemBase64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+            if (caminhosFotos.isNotEmpty()) {
+                val listaBase64 = org.json.JSONArray()
+                for (caminho in caminhosFotos) {
+                    val arquivo = java.io.File(caminho)
+                    if (arquivo.exists()) {
+                        val bytes = arquivo.readBytes()
+                        listaBase64.put(android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+                    }
                 }
+                put("imagensBase64", listaBase64)
             }
         }
 
         ApiClient.post("paginas/criar.php", corpo, onSucesso = {
-            java.io.File(caminhoFotoAnexada ?: "").delete()  // não precisa mais guardar localmente, já subiu
+            limparFotosTemporarias()
             mostrarAviso(this, "Página salva!")
             finish()
         }, onErro = { mensagem -> mostrarErro(this, mensagem) })
     }
 
+    private fun limparFotosTemporarias() {
+        for (caminho in caminhosFotos) {
+            java.io.File(caminho).delete()
+        }
+        caminhosFotos.clear()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Se tirou foto mas não chegou a salvar a página (voltou sem
-        // salvar), não deixa o arquivo esquecido no celular. Se já foi
-        // salva com sucesso, o arquivo já não existe mais nesse ponto
-        // (apagado em salvarPagina()), então isso não faz nada nesse caso.
-        caminhoFotoAnexada?.let { java.io.File(it).delete() }
+        // Se tirou foto(s) mas não chegou a salvar a página, não deixa os
+        // arquivos esquecidos no celular. Se já foi salva com sucesso, a
+        // lista já está vazia nesse ponto (limparFotosTemporarias já
+        // rodou), então isso não faz nada nesse caso.
+        limparFotosTemporarias()
     }
 
     companion object {

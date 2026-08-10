@@ -98,6 +98,7 @@ class BuscaActivity : Activity() {
                         intent.putExtra("conteudo", p.optString("conteudo"))
                         intent.putExtra("tipo", p.optString("tipo"))
                         intent.putExtra("dataEntrega", p.optString("dataEntrega"))
+                        intent.putExtra("totalFotos", p.optInt("totalFotos", 0))
                         startActivity(intent)
                     })
                 }

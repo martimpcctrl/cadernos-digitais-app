@@ -11,7 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 class AdaptadorCadernos(
     private val activity: Activity,
     private var itens: List<Caderno>,
-    private val aoClicar: (Caderno) -> Unit
+    private val aoClicar: (Caderno) -> Unit,
+    private val aoSegurar: (Caderno) -> Unit
 ) : RecyclerView.Adapter<AdaptadorCadernos.ViewHolder>() {
 
     class ViewHolder(val raiz: LinearLayout, val nome: TextView, val info: TextView) : RecyclerView.ViewHolder(raiz)
@@ -71,8 +72,9 @@ class AdaptadorCadernos(
             holder.raiz.setBackgroundColor(Color.parseColor(Cores.SUPERFICIE))
         } catch (e: Exception) { /* ignora cor inválida */ }
 
-        holder.raiz.contentDescription = "${holder.nome.text}. ${holder.info.text}. Toque duas vezes pra abrir."
+        holder.raiz.contentDescription = "${holder.nome.text}. ${holder.info.text}. Toque duas vezes pra abrir. Toque e segure pra editar."
         holder.raiz.setOnClickListener { aoClicar(caderno) }
+        holder.raiz.setOnLongClickListener { aoSegurar(caderno); true }
     }
 
     override fun getItemCount(): Int = itens.size
