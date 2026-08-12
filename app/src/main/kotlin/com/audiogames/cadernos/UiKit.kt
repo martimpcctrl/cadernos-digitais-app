@@ -145,12 +145,23 @@ fun criarTelaBase(
     barra.addView(tituloView)
 
     if (aoClicarMaisOpcoes != null) {
+        // Um botão comum do Android já vem com bastante espaço em branco
+        // por dentro (pensado pra botões grandes tipo "Salvar") - isso
+        // fazia a barra inteira esticar e o "⋮" parecer solto/baixo, em
+        // vez de ficar coladinho no canto. Zerando o tamanho mínimo e o
+        // preenchimento, ele fica do tamanho de um ícone mesmo.
         val botaoMenu = Button(activity).apply {
             text = "⋮"
             contentDescription = "Mais opções"
-            textSize = 20f
+            textSize = 22f
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.TRANSPARENT)
+            minWidth = 0
+            minHeight = 0
+            setPadding(dp(activity, 10), dp(activity, 4), dp(activity, 6), dp(activity, 4))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { gravity = Gravity.CENTER_VERTICAL }
             setOnClickListener { view -> aoClicarMaisOpcoes(view) }
         }
         barra.addView(botaoMenu)
