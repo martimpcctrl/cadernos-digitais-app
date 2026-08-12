@@ -41,6 +41,9 @@ class DashboardActivity : Activity() {
         if (intent.getBooleanExtra("abrirNovoCaderno", false)) {
             abrirDialogoNovoCaderno()
         }
+        if (intent.getBooleanExtra("abrirEscolherCadernoParaPagina", false)) {
+            abrirEscolherCadernoParaPagina()
+        }
     }
 
     private fun pedirPermissaoNotificacao() {
@@ -180,6 +183,30 @@ class DashboardActivity : Activity() {
         intent.putExtra("cadernoNome", caderno.nome)
         intent.putExtra("professor", caderno.professor)
         startActivity(intent)
+    }
+
+    private fun abrirEscolherCadernoParaPagina() {
+        ApiClient.get("cadernos/listar.php", onSucesso = { json ->
+            val array = json.optJSONArray("cadernos") ?: JSONArray()
+            if (array.length() == 0) {
+                mostrarAviso(this, "Você ainda não tem nenhum caderno. Crie um primeiro.")
+                return@get
+            }
+
+            val cadernos = (0 until array.length()).map { Caderno.deJson(array.getJSONObject(it)) }
+            val nomes = cadernos.map { it.nome }.toTypedArray()
+
+            AlertDialog.Builder(contextoTema(this))
+                .setTitle("Em qual caderno?")
+                .setItems(nomes) { _, posicao ->
+                    val caderno = cadernos[posicao]
+                    val intent = Intent(this, NovaPaginaActivity::class.java)
+                    intent.putExtra("cadernoId", caderno.id)
+                    startActivity(intent)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }, onErro = { mensagem -> mostrarErro(this, mensagem) })
     }
 
     private fun abrirDialogoNovoCaderno() {

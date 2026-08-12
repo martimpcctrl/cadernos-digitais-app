@@ -290,6 +290,7 @@ class CadernoActivity : Activity() {
                 val corpo = JSONObject().apply { put("cadernoId", cadernoId) }
                 ApiClient.post("cadernos/excluir.php", corpo, onSucesso = {
                     mostrarAviso(this, "Caderno excluído.")
+                    TarefasWidgetProvider.atualizarTodosOsWidgets(this)
                     finish()
                 }, onErro = { mensagem -> mostrarErro(this, mensagem) })
             }

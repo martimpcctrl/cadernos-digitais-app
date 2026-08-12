@@ -44,12 +44,23 @@ class TarefasWidgetProvider : AppWidgetProvider() {
                 android.app.PendingIntent.getActivity(context, 1, intentNovoCaderno, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
             )
 
-            // Botão "+ Página" e toque no corpo do widget - abrem o Dashboard normal.
+            // Botão "+ Página" - pede pra escolher em qual caderno, e leva
+            // direto pra criar a página lá (tem requestCode PRÓPRIO, código 3,
+            // pra não ser confundido com o clique no título/corpo do widget -
+            // antes os dois compartilhavam o mesmo PendingIntent por engano,
+            // e por isso "+ Página" não fazia nada diferente de abrir o app).
+            val intentEscolherCaderno = Intent(context, DashboardActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("abrirEscolherCadernoParaPagina", true)
+            }
+            val pendingEscolherCaderno = android.app.PendingIntent.getActivity(context, 3, intentEscolherCaderno, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+            views.setOnClickPendingIntent(R.id.widget_botao_nova_pagina, pendingEscolherCaderno)
+
+            // Toque no corpo/título do widget - abre o Dashboard normal.
             val intentDashboard = Intent(context, DashboardActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             val pendingDashboard = android.app.PendingIntent.getActivity(context, 2, intentDashboard, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
-            views.setOnClickPendingIntent(R.id.widget_botao_nova_pagina, pendingDashboard)
             views.setOnClickPendingIntent(R.id.widget_titulo, pendingDashboard)
 
             appWidgetManager.updateAppWidget(idWidget, views)
@@ -65,7 +76,7 @@ class TarefasWidgetProvider : AppWidgetProvider() {
                     val viewsAtualizado = RemoteViews(context.packageName, R.layout.widget_tarefas)
                     viewsAtualizado.setOnClickPendingIntent(R.id.widget_botao_novo_caderno,
                         android.app.PendingIntent.getActivity(context, 1, intentNovoCaderno, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE))
-                    viewsAtualizado.setOnClickPendingIntent(R.id.widget_botao_nova_pagina, pendingDashboard)
+                    viewsAtualizado.setOnClickPendingIntent(R.id.widget_botao_nova_pagina, pendingEscolherCaderno)
                     viewsAtualizado.setOnClickPendingIntent(R.id.widget_titulo, pendingDashboard)
 
                     if (tarefas == null) {

@@ -129,6 +129,7 @@ class PaginaActivity : Activity() {
                 val corpo = JSONObject().apply { put("paginaId", paginaId) }
                 ApiClient.post("paginas/excluir.php", corpo, onSucesso = {
                     mostrarAviso(this, "Página excluída.")
+                    TarefasWidgetProvider.atualizarTodosOsWidgets(this)
                     finish()
                 }, onErro = { mensagem -> mostrarErro(this, mensagem) })
             }
