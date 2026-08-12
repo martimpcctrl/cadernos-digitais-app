@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
@@ -13,6 +14,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -74,7 +76,7 @@ class DashboardActivity : Activity() {
     }
 
     private fun montarTela() {
-        val raiz = criarTelaBase(this, "Meus Cadernos", mostrarVoltar = false)
+        val raiz = criarTelaBase(this, "Meus Cadernos", mostrarVoltar = false, aoClicarMaisOpcoes = { ancora -> mostrarMenuMaisOpcoes(ancora) })
 
         val acoes = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -82,7 +84,6 @@ class DashboardActivity : Activity() {
         }
         acoes.addView(botaoAcao("Resumo do dia") { startActivity(Intent(this, ResumoDiaActivity::class.java)) })
         acoes.addView(botaoAcao("Buscar") { startActivity(Intent(this, BuscaActivity::class.java)) })
-        acoes.addView(botaoAcao("Config.") { startActivity(Intent(this, ConfiguracoesActivity::class.java)) })
 
         adaptador = AdaptadorCadernos(this, emptyList(), { caderno -> abrirCaderno(caderno) }, { caderno -> abrirDialogoEditarCaderno(caderno) })
         lista = RecyclerView(this).apply {
@@ -127,6 +128,34 @@ class DashboardActivity : Activity() {
     private fun botaoAcao(texto: String, onClick: () -> Unit) = criarBotaoSecundario(this, texto, onClick).apply {
         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
             marginEnd = dp(this@DashboardActivity, 6)
+        }
+    }
+
+    private fun mostrarMenuMaisOpcoes(ancora: View) {
+        val popup = PopupMenu(contextoTema(this), ancora)
+        popup.menu.add(0, 1, 0, "Configurações")
+        popup.menu.add(0, 2, 1, "Encontrou algum bug?")
+        popup.menu.add(0, 3, 2, "Sobre")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                1 -> startActivity(Intent(this, ConfiguracoesActivity::class.java))
+                2 -> abrirEmailSuporte()
+                3 -> startActivity(Intent(this, SobreActivity::class.java))
+            }
+            true
+        }
+        popup.show()
+    }
+
+    private fun abrirEmailSuporte() {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:martim@audiogames.com.br")
+            putExtra(Intent.EXTRA_SUBJECT, "Cadernos Digitais - Relato de bug")
+        }
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            mostrarErro(this, "Nenhum app de e-mail encontrado. Escreva pra martim@audiogames.com.br")
         }
     }
 

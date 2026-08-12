@@ -101,8 +101,16 @@ fun contextoTema(activity: Activity): android.content.Context {
     return android.view.ContextThemeWrapper(activity, temaId)
 }
 
-/** Monta o "esqueleto" padrão de tela: barra de título (com botão voltar opcional) + área de conteúdo. */
-fun criarTelaBase(activity: Activity, titulo: String, mostrarVoltar: Boolean = true): LinearLayout {
+/** Monta o "esqueleto" padrão de tela: barra de título (com botão voltar opcional) + área de conteúdo.
+ *  Se `aoClicarMaisOpcoes` for passado, mostra um botão "⋮" (três pontinhos) no canto direito da
+ *  barra, do jeito comum em app Android - quem chamar recebe o próprio botão como parâmetro, pra
+ *  poder ancorar um PopupMenu nele. */
+fun criarTelaBase(
+    activity: Activity,
+    titulo: String,
+    mostrarVoltar: Boolean = true,
+    aoClicarMaisOpcoes: ((View) -> Unit)? = null,
+): LinearLayout {
     val raiz = LinearLayout(activity).apply {
         orientation = LinearLayout.VERTICAL
         setBackgroundColor(Color.parseColor(Cores.FUNDO))
@@ -135,6 +143,18 @@ fun criarTelaBase(activity: Activity, titulo: String, mostrarVoltar: Boolean = t
         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     }
     barra.addView(tituloView)
+
+    if (aoClicarMaisOpcoes != null) {
+        val botaoMenu = Button(activity).apply {
+            text = "⋮"
+            contentDescription = "Mais opções"
+            textSize = 20f
+            setTextColor(Color.WHITE)
+            setBackgroundColor(Color.TRANSPARENT)
+            setOnClickListener { view -> aoClicarMaisOpcoes(view) }
+        }
+        barra.addView(botaoMenu)
+    }
 
     raiz.addView(barra)
     return raiz
