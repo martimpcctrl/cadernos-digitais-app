@@ -57,8 +57,8 @@ class CadernosMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(mensagem: RemoteMessage) {
         super.onMessageReceived(mensagem)
 
-        val titulo = mensagem.notification?.title ?: "Cadernos Digitais"
-        val corpo = mensagem.notification?.body ?: ""
+        val titulo = mensagem.data["title"] ?: mensagem.notification?.title ?: "Cadernos Digitais"
+        val corpo = mensagem.data["body"] ?: mensagem.notification?.body ?: ""
 
         NotificacoesStore.salvar(this, titulo, corpo)
 
