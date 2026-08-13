@@ -137,11 +137,13 @@ class DashboardActivity : Activity() {
     private fun mostrarMenuMaisOpcoes(ancora: View) {
         val popup = PopupMenu(contextoTema(this), ancora)
         popup.menu.add(0, 1, 0, "Configurações")
-        popup.menu.add(0, 2, 1, "Encontrou algum bug?")
-        popup.menu.add(0, 3, 2, "Sobre")
+        popup.menu.add(0, 4, 1, "Notificações")
+        popup.menu.add(0, 2, 2, "Encontrou algum bug?")
+        popup.menu.add(0, 3, 3, "Sobre")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> startActivity(Intent(this, ConfiguracoesActivity::class.java))
+                4 -> startActivity(Intent(this, NotificacoesActivity::class.java))
                 2 -> abrirEmailSuporte()
                 3 -> startActivity(Intent(this, SobreActivity::class.java))
             }

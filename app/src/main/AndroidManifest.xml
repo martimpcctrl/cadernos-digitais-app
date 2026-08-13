@@ -40,6 +40,7 @@
         <activity android:name=".ConfigContaActivity" android:exported="false" />
         <activity android:name=".ProfessoresActivity" android:exported="false" />
         <activity android:name=".SobreActivity" android:exported="false" />
+        <activity android:name=".NotificacoesActivity" android:exported="false" />
         <activity android:name=".EnviarEmailActivity" android:exported="false" />
         <activity android:name=".CompartilharActivity" android:exported="false" />
         <activity

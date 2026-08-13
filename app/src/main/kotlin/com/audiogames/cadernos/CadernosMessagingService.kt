@@ -60,6 +60,8 @@ class CadernosMessagingService : FirebaseMessagingService() {
         val titulo = mensagem.notification?.title ?: "Cadernos Digitais"
         val corpo = mensagem.notification?.body ?: ""
 
+        NotificacoesStore.salvar(this, titulo, corpo)
+
         criarCanalNotificacao(this)
 
         val intent = Intent(this, DashboardActivity::class.java).apply {
